@@ -12,4 +12,4 @@ temp/*
 working/*
 *.pdf
 *.txt
-!.devcontainer_/*
+!.devcontainer/*
