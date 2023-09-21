@@ -13,4 +13,4 @@ working/*
 *.pdf
 *.txt
 !.devcontainer/*
-!.vscode_/*
+!.vscode/*
