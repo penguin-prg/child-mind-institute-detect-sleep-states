@@ -9,5 +9,6 @@
 !*.yaml
 tmp/*
 temp/*
+working/*
 *.pdf
 *.txt
