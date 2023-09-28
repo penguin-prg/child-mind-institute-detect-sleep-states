@@ -10,7 +10,7 @@ import cudf
 from cuml import ForestInference
 
 
-def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, params: dict, es_rounds=20, verbose=50):
+def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, features: list, params: dict, es_rounds=20, verbose=50):
     models = []
     oof = np.zeros(len(y), dtype=np.float64)
 
@@ -18,11 +18,8 @@ def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, params: dict, es_ro
         print(f"== fold {i} ==")
         trn_idx = folds != i
         val_idx = folds == i
-        X_train, y_train = X[trn_idx], y[trn_idx]
-        X_valid, y_valid = X[val_idx], y[val_idx]
-
-        dtrain = xgb.DMatrix(X_train, label=y_train, enable_categorical=True)
-        dvalid = xgb.DMatrix(X_valid, label=y_valid, enable_categorical=True)
+        dtrain = xgb.DMatrix(X[features][trn_idx], label=y[trn_idx], enable_categorical=True)
+        dvalid = xgb.DMatrix(X[features][val_idx], label=y[val_idx], enable_categorical=True)
         evallist = [(dvalid, "eval")]
 
         model = xgb.train(
@@ -37,7 +34,7 @@ def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, params: dict, es_ro
         oof[val_idx] = valid_pred
         models.append(model)
 
-        del X_train, X_valid, y_train, y_valid, dtrain, dvalid, valid_pred
+        del dtrain, dvalid, valid_pred
         gc.collect()
 
     return oof, models
