@@ -28,7 +28,8 @@
         "njpwerner.autodocstring",
         "ms-python.black-formatter",
         "mhutchie.git-graph",
-        "github.copilot"
+        "github.copilot",
+        "redhat.vscode-yaml"
       ]
     }
   }

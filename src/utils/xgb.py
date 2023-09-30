@@ -10,7 +10,7 @@ import cudf
 from cuml import ForestInference
 
 
-def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, features: list, params: dict, es_rounds=20, verbose=50):
+def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, features: list, params: dict, es_rounds=20, verbose=100):
     models = []
     oof = np.zeros(len(y), dtype=np.float64)
 
