@@ -1,0 +1,68 @@
+dataset:
+    competition_dir: /kaggle/input/child-mind-institute-detect-sleep-states
+    cv_split_path: /kaggle/input/cv_split/train_folds.csv
+    train_base_path: /kaggle/input/train_base/train_base.csv
+    step_csv_dir: /kaggle/input/save_series_csv/csvs
+
+feature:
+    agg_freq: 24 # [step]
+
+env:
+    seed: 46
+    num_threads: 30
+
+1st_stage:
+    execution:
+        exp_id: exp_043
+        best_exp_id: exp_043
+    xgboost:
+        objective: binary:logistic
+        learning_rate: 0.1
+        reg_alpha: 0.02
+        reg_lambda: 0.2
+        random_state: 42
+        max_depth: 5
+        colsample_bytree: 0.7
+        tree_method: gpu_hist
+
+2nd_stage:
+    execution:
+        exp_id: exp_044
+        best_exp_id: exp_044
+    xgboost:
+        objective: binary:logistic
+        learning_rate: 0.1
+        reg_alpha: 0.02
+        reg_lambda: 0.2
+        random_state: 42
+        max_depth: 5
+        colsample_bytree: 0.7
+        tree_method: gpu_hist
+
+regressor:
+    execution:
+        exp_id: exp_045
+        best_exp_id: exp_045
+    xgboost:
+        objective: reg:squarederror
+        learning_rate: 0.01
+        reg_alpha: 0.02
+        reg_lambda: 0.2
+        random_state: 42
+        max_depth: 7
+        colsample_bytree: 0.5
+        tree_method: gpu_hist
+
+ranker:
+    execution:
+        exp_id: exp_046
+        best_exp_id: exp_046
+    xgboost:
+        objective: reg:squarederror
+        learning_rate: 0.01
+        reg_alpha: 0.02
+        reg_lambda: 0.2
+        random_state: 42
+        max_depth: 7
+        colsample_bytree: 0.5
+        tree_method: gpu_hist

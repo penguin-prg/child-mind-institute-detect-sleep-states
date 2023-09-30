@@ -4,11 +4,6 @@ from pandas.api.types import is_datetime64_ns_dtype
 
 
 def reduce_mem_usage(df: pd.DataFrame):
-    """
-    Iterate through all numeric columns of a dataframe and modify the data type
-    to reduce memory usage.
-    """
-
     for col in df.columns:
         col_type = df[col].dtype
 
