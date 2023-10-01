@@ -1,13 +1,8 @@
 import xgboost as xgb
-from sklearn.metrics import roc_auc_score
-import pickle
 from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import gc
-import cupy
-import cudf
-from cuml import ForestInference
 
 
 def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, features: list, params: dict, es_rounds=20, verbose=100):
@@ -41,7 +36,7 @@ def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, features: list, par
 
 
 def inference_xgb(models: list, feat_df: pd.DataFrame, pred_type: str = "regression"):
-    assert pred_type in ["regression"]
+    assert pred_type in ["regression", "binary"]
     if pred_type == "regression":
-        pred = np.array([model.predict(feat_df) for model in models])
+        pred = np.array([model.predict(feat_df) for model in models]).mean(axis=0)
     return pred
