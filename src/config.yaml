@@ -5,64 +5,64 @@ dataset:
     step_csv_dir: /kaggle/input/save_series_csv/csvs
 
 feature:
-    agg_freq: 24 # [step]
+    agg_freq: 23 # [step]
 
 env:
-    seed: 46
+    seed: 4646
     num_threads: 30
 
 1st_stage:
     execution:
-        exp_id: exp_047
-        best_exp_id: exp_043
+        exp_id: exp_050
+        best_exp_id: exp_050
     xgboost:
         objective: binary:logistic
         learning_rate: 0.1
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
+        reg_alpha: 0.2
+        reg_lambda: 0.25
+        random_state: 435
         max_depth: 5
-        colsample_bytree: 0.7
+        colsample_bytree: 0.6
         tree_method: gpu_hist
 
 2nd_stage:
     execution:
-        exp_id: exp_044
-        best_exp_id: exp_044
+        exp_id: exp_051
+        best_exp_id: exp_051
     xgboost:
         objective: binary:logistic
         learning_rate: 0.1
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
+        reg_alpha: 0.029
+        reg_lambda: 0.22
+        random_state: 25
         max_depth: 5
-        colsample_bytree: 0.7
+        colsample_bytree: 0.5
         tree_method: gpu_hist
 
 regressor:
     execution:
-        exp_id: exp_045
-        best_exp_id: exp_045
+        exp_id: exp_052
+        best_exp_id: exp_052
     xgboost:
         objective: reg:squarederror
         learning_rate: 0.01
-        reg_alpha: 0.02
+        reg_alpha: 0.022
         reg_lambda: 0.2
-        random_state: 42
+        random_state: 54
         max_depth: 7
-        colsample_bytree: 0.5
+        colsample_bytree: 0.45
         tree_method: gpu_hist
 
 ranker:
     execution:
-        exp_id: exp_046
-        best_exp_id: exp_046
+        exp_id: exp_053
+        best_exp_id: exp_053
     xgboost:
         objective: reg:squarederror
         learning_rate: 0.01
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
+        reg_alpha: 0.2
+        reg_lambda: 2
+        random_state: 15
         max_depth: 7
         colsample_bytree: 0.5
         tree_method: gpu_hist
