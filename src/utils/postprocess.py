@@ -19,9 +19,7 @@ def post_process(train: pd.DataFrame, output_dir: Optional[str] = None) -> pd.Da
     for series_id, df in tqdm(train.groupby("series_id"), desc="post process"):
         df = df.reset_index(drop=True)
         df["raw_oof"] = df["oof"]
-        df["oof"] = df["oof"].rolling(24, center=True).mean()
-        df["oof"][0] = 1
-        df["oof"][-1] = 1
+        df["oof"] = df["oof"].rolling(24, center=True).mean().fillna(1)
 
         # イベントの時刻
         wakeup_index = np.array([i for i in range(1, len(df["oof"])) if df["oof"][i - 1] < 0.5 and df["oof"][i] >= 0.5])

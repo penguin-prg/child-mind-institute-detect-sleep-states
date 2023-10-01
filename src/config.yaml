@@ -13,7 +13,7 @@ env:
 
 1st_stage:
     execution:
-        exp_id: exp_043
+        exp_id: exp_047
         best_exp_id: exp_043
     xgboost:
         objective: binary:logistic

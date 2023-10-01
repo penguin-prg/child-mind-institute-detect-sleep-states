@@ -55,4 +55,3 @@ def inference_xgb(models: list, feat_df: pd.DataFrame, pred_type: str = "regress
     if pred_type == "regression":
         pred = np.array([model.predict(dtrain) for model in models]).mean(axis=0)
     return pred
-
