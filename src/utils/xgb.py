@@ -5,12 +5,26 @@ import pandas as pd
 import gc
 
 
-def fit_xgb(X: pd.DataFrame, y: pd.Series, folds: pd.Series, features: list, params: dict, es_rounds=20, verbose=100):
+def fit_xgb(
+    X: pd.DataFrame,
+    y: pd.Series,
+    folds: pd.Series,
+    features: list,
+    params: dict,
+    es_rounds=20,
+    verbose=100,
+    log=True,
+):
     models = []
     oof = np.zeros(len(y), dtype=np.float64)
 
-    for i in tqdm(range(max(folds) + 1)):
-        print(f"== fold {i} ==")
+    if log:
+        bar = tqdm(range(max(folds) + 1))
+    else:
+        bar = range(max(folds) + 1)
+    for i in bar:
+        if log:
+            print(f"== fold {i} ==")
         trn_idx = folds != i
         val_idx = folds == i
         dtrain = xgb.DMatrix(X[features][trn_idx], label=y[trn_idx], enable_categorical=True)

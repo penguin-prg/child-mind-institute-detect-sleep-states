@@ -13,16 +13,16 @@ env:
 
 1st_stage:
     execution:
-        exp_id: exp_043
+        exp_id: exp_047
         best_exp_id: exp_043
     xgboost:
         objective: binary:logistic
         learning_rate: 0.1
-        reg_alpha: 0.02
-        reg_lambda: 0.2
+        reg_alpha: 200
+        reg_lambda: 150
         random_state: 42
-        max_depth: 5
-        colsample_bytree: 0.7
+        max_depth: 7
+        colsample_bytree: 0.5
         tree_method: gpu_hist
 
 2nd_stage:
