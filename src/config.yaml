@@ -55,10 +55,10 @@ regressor:
 
 ranker:
     execution:
-        exp_id: exp_046
+        exp_id: exp_055
         best_exp_id: exp_046
     xgboost:
-        objective: reg:squarederror
+        # objective: reg:squarederror
         learning_rate: 0.01
         reg_alpha: 0.02
         reg_lambda: 0.2

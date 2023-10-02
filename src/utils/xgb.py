@@ -5,6 +5,27 @@ import pandas as pd
 import gc
 
 
+def custom_bce(preds, dtrain):
+    # ソフトラベルを取得
+    labels = dtrain.get_label()
+    # シグモイド関数で予測を[0,1]の間に制約
+    preds = 1.0 / (1.0 + np.exp(-preds))
+    # 損失の計算
+    grad = preds - labels
+    hess = preds * (1.0 - preds)
+    return grad, hess
+
+
+def custom_bce_eval(preds, dtrain):
+    # ソフトラベルを取得
+    labels = dtrain.get_label()
+    # シグモイド関数で予測を[0,1]の間に制約
+    preds = 1.0 / (1.0 + np.exp(-preds))
+    # 評価指標の計算
+    err = -np.mean(labels * np.log(preds) + (1.0 - labels) * np.log(1.0 - preds))
+    return "custom_bce", err
+
+
 def fit_xgb(
     X: pd.DataFrame,
     y: pd.Series,
@@ -38,6 +59,8 @@ def fit_xgb(
             evals=evallist,
             early_stopping_rounds=es_rounds,
             verbose_eval=verbose,
+            obj=custom_bce,
+            feval=custom_bce_eval,
         )
         valid_pred = model.predict(dvalid)
         oof[val_idx] = valid_pred
