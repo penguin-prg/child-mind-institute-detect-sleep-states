@@ -3,6 +3,7 @@ dataset:
     cv_split_path: /kaggle/input/cv-split/train_folds.csv
     train_base_path: /kaggle/input/train_base/train_base.csv
     step_csv_dir: /kaggle/input/save_series_csv/csvs
+    step_det_csv_dir: /kaggle/input/save_reg_series_csv/csvs
 
 feature:
     agg_freq: 24 # [step]
@@ -17,6 +18,20 @@ env:
         best_exp_id: exp_043
     xgboost:
         objective: binary:logistic
+        learning_rate: 0.1
+        reg_alpha: 0.02
+        reg_lambda: 0.2
+        random_state: 42
+        max_depth: 5
+        colsample_bytree: 0.7
+        tree_method: gpu_hist
+
+1st_stage_det:
+    execution:
+        exp_id: exp_055
+        best_exp_id: exp_055
+    xgboost:
+        objective: reg:squarederror
         learning_rate: 0.1
         reg_alpha: 0.02
         reg_lambda: 0.2
