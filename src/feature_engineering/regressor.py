@@ -19,10 +19,16 @@ from utils.feature_contena import Features
 def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
     features = Features()
     train["for_pred"] = train["target"].notna().astype(float)
+    features.add_num_features(["level"])
 
     # event
     train["bin_event"] = train["event"].map({"onset": 0.0, "wakeup": 1.0})
     features.add_num_feature("bin_event")
+
+    # gap
+    train["sub_gap"] = train["sub_step"] - train["step"]
+    train["sub_minutes"] = (train["minutes"] + train["sub_gap"] * 12) % (60 * 60)
+    features.add_num_features(["sub_gap", "sub_minutes"])
 
     # 時刻
     train["total_seconds"] = train.index * 5 * CFG["feature"]["agg_freq"] % (24 * 60 * 60)

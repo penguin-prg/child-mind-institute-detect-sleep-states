@@ -41,8 +41,8 @@ env:
 
 regressor:
     execution:
-        exp_id: exp_045
-        best_exp_id: exp_045
+        exp_id: exp_067
+        best_exp_id: exp_067
     xgboost:
         objective: reg:squarederror
         learning_rate: 0.01
@@ -55,7 +55,7 @@ regressor:
 
 ranker:
     execution:
-        exp_id: exp_046
+        exp_id: exp_068
         best_exp_id: exp_046
     xgboost:
         objective: reg:squarederror
