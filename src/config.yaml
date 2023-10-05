@@ -66,3 +66,8 @@ ranker:
         max_depth: 7
         colsample_bytree: 0.5
         tree_method: gpu_hist
+
+wavenet:
+    execution:
+        exp_id: exp_069
+        best_exp_id: exp_069
