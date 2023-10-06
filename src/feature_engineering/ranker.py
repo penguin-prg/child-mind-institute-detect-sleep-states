@@ -17,6 +17,8 @@ from utils.feature_contena import Features
 
 
 def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
+    train = train.sort_values(["step", "level"]).reset_index(drop=True)
+
     features = Features()
     features.add_num_features(["level", "score"])
 

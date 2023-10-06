@@ -22,6 +22,8 @@ from utils.feature_contena import Features
 
 
 def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
+    train = train.sort_values("step").reset_index(drop=True)
+
     features = Features()
 
     # 時刻
