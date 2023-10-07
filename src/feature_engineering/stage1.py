@@ -78,7 +78,9 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train["series_id"] = series_id
     train["target"] = train["target"].round().astype(int)
 
-    train = reduce_mem_usage(train)
+    # train = reduce_mem_usage(train)
+    for f in features.all_features():
+        train[f] = train[f].astype("float32")
     gc.collect()
     return train, features
 
@@ -95,5 +97,8 @@ def generate_1st_stage_features(files: List[str]) -> Tuple[pd.DataFrame, Feature
     dfs, features = zip(*results)
     train = pd.concat(dfs)
     features = features[0]
+
+    for f in features.all_features():
+        train[f] = train[f].astype("float32")
 
     return train, features
