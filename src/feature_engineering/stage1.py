@@ -25,17 +25,17 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     timestamp = pd.to_datetime(train["timestamp"].values[0])
     total_seconds = (timestamp - timestamp.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
     train["total_seconds"] = (total_seconds + train.index * 5) % (24 * 60 * 60)  # [sec]
-    features.add_num_feature("total_seconds")
+    # features.add_num_feature("total_seconds")
 
     columns = ["anglez", "enmo"]
 
-    # その人のその時刻での平均的な測定値
-    gb = train.groupby("total_seconds")[columns].mean()
-    gb.columns = [f"{c}_mean" for c in columns]
-    train["anglez_mean"] = train["total_seconds"].map(gb["anglez_mean"])
-    train["enmo_mean"] = train["total_seconds"].map(gb["enmo_mean"])
-    features.add_num_features(gb.columns.tolist())
-    columns += gb.columns.tolist()
+    # # その人のその時刻での平均的な測定値
+    # gb = train.groupby("total_seconds")[columns].mean()
+    # gb.columns = [f"{c}_mean" for c in columns]
+    # train["anglez_mean"] = train["total_seconds"].map(gb["anglez_mean"])
+    # train["enmo_mean"] = train["total_seconds"].map(gb["enmo_mean"])
+    # features.add_num_features(gb.columns.tolist())
+    # columns += gb.columns.tolist()
 
     # diff
     f_names = [f"{c}_diff_abs" for c in columns]
@@ -58,17 +58,17 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         train[f_names] = train[columns].rolling(dt, center=True).max()
         features.add_num_features(f_names)
 
-        f_names = [f"{c}_rolling_min_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).min()
-        features.add_num_features(f_names)
+        # f_names = [f"{c}_rolling_min_{dt}" for c in columns]
+        # train[f_names] = train[columns].rolling(dt, center=True).min()
+        # features.add_num_features(f_names)
 
-        f_names = [f"{c}_rolling_median_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).median()
-        features.add_num_features(f_names)
+        # f_names = [f"{c}_rolling_median_{dt}" for c in columns]
+        # train[f_names] = train[columns].rolling(dt, center=True).median()
+        # features.add_num_features(f_names)
 
-        f_names = [f"{c}_rolling_square_mean_{dt}" for c in columns]
-        train[f_names] = (train[columns] ** 2).rolling(dt, center=True).mean()
-        features.add_num_features(f_names)
+        # f_names = [f"{c}_rolling_square_mean_{dt}" for c in columns]
+        # train[f_names] = (train[columns] ** 2).rolling(dt, center=True).mean()
+        # features.add_num_features(f_names)
 
     # 一定stepで集約
     series_id = train["series_id"].values[0]
