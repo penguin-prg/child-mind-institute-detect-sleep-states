@@ -13,8 +13,9 @@ env:
 
 1st_stage:
     execution:
-        exp_id: exp_071
-        best_exp_id: exp_071
+        exp_id: exp_076
+        best_exp_id: exp_076
+        downsample_rate: 20
     xgboost:
         objective: binary:logistic
         learning_rate: 0.1
@@ -24,45 +25,44 @@ env:
         max_depth: 5
         colsample_bytree: 0.7
         tree_method: gpu_hist
+# 2nd_stage:
+#     execution:
+#         exp_id: exp_072
+#         best_exp_id: exp_072
+#     xgboost:
+#         objective: binary:logistic
+#         learning_rate: 0.1
+#         reg_alpha: 0.02
+#         reg_lambda: 0.2
+#         random_state: 42
+#         max_depth: 5
+#         colsample_bytree: 0.7
+#         tree_method: gpu_hist
 
-2nd_stage:
-    execution:
-        exp_id: exp_072
-        best_exp_id: exp_072
-    xgboost:
-        objective: binary:logistic
-        learning_rate: 0.1
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 5
-        colsample_bytree: 0.7
-        tree_method: gpu_hist
+# regressor:
+#     execution:
+#         exp_id: exp_073
+#         best_exp_id: exp_073
+#     xgboost:
+#         objective: reg:squarederror
+#         learning_rate: 0.01
+#         reg_alpha: 0.02
+#         reg_lambda: 0.2
+#         random_state: 42
+#         max_depth: 7
+#         colsample_bytree: 0.5
+#         tree_method: gpu_hist
 
-regressor:
-    execution:
-        exp_id: exp_073
-        best_exp_id: exp_073
-    xgboost:
-        objective: reg:squarederror
-        learning_rate: 0.01
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 7
-        colsample_bytree: 0.5
-        tree_method: gpu_hist
-
-ranker:
-    execution:
-        exp_id: exp_075
-        best_exp_id: exp_075
-    xgboost:
-        objective: reg:squarederror
-        learning_rate: 0.01
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 7
-        colsample_bytree: 0.5
-        tree_method: gpu_hist
+# ranker:
+#     execution:
+#         exp_id: exp_075
+#         best_exp_id: exp_075
+#     xgboost:
+#         objective: reg:squarederror
+#         learning_rate: 0.01
+#         reg_alpha: 0.02
+#         reg_lambda: 0.2
+#         random_state: 42
+#         max_depth: 7
+#         colsample_bytree: 0.5
+#         tree_method: gpu_hist

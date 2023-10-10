@@ -3,6 +3,10 @@ from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import gc
+from typing import Dict, List, Optional
+
+import matplotlib.pyplot as plt
+from xgboost.core import Booster
 
 
 def fit_xgb(
@@ -49,9 +53,39 @@ def fit_xgb(
     return oof, models
 
 
-def inference_xgb(models: list, feat_df: pd.DataFrame, pred_type: str = "regression"):
-    assert pred_type in ["regression", "binary"]
+def inference_xgb(models: List[Booster], feat_df: pd.DataFrame):
     dtrain = xgb.DMatrix(feat_df, enable_categorical=True)
-    if pred_type == "regression":
-        pred = np.array([model.predict(dtrain) for model in models]).mean(axis=0)
+    pred = np.array([model.predict(dtrain) for model in models]).mean(axis=0)
     return pred
+
+
+def plot_importances(models: List[Booster], save_path: Optional[str] = None) -> Dict[str, float]:
+    """特徴量の重要度をプロットする"""
+    # 重要度の統計量
+    all_importances = {f: [] for f in models[0].feature_names}
+    for model in models:
+        importance = model.get_score(importance_type="gain")
+        for f, imp in importance.items():
+            all_importances[f].append(imp)
+    average_importances = {
+        feature: (sum(values) / len(values)) if len(values) > 0 else 0 for feature, values in all_importances.items()
+    }
+    sorted_features = sorted(average_importances.keys(), key=lambda x: average_importances[x], reverse=True)
+    sorted_values = [all_importances[feature] for feature in sorted_features]
+
+    # グラフの描画
+    plt.figure(figsize=(max(int(len(importance) / 5), 10), 6))
+    plt.boxplot(sorted_values, labels=sorted_features, showfliers=False)
+    plt.xlabel("Feature")
+    plt.ylabel("Importance")
+    plt.grid()
+    plt.title("Feature Importance using Gain")
+    plt.xticks(rotation=90)
+    plt.tight_layout()
+    if save_path is None:
+        plt.show()
+    else:
+        plt.savefig(save_path)
+    plt.close()
+
+    return average_importances

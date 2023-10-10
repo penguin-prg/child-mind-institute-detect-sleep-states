@@ -71,27 +71,35 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         features.add_num_features(f_names)
 
     # 一定stepで集約
-    series_id = train["series_id"].values[0]
-    agg_freq = CFG["feature"]["agg_freq"]
-    columns = features.all_features() + ["target", "step"]
-    train = train[columns].groupby(train["step"].values // agg_freq).mean()
-    train["series_id"] = series_id
-    train["target"] = train["target"].round().astype(int)
+    train = train[train["is_leave_sample"] == True].reset_index(drop=True)
 
     train = reduce_mem_usage(train)
     gc.collect()
     return train, features
 
 
-def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
-    train = pd.read_csv(file)
+def read_and_generate_features(file_rate: Tuple[str, int]) -> Tuple[pd.DataFrame, Features]:
+    file, downsample_rate = file_rate
+    train = pd.read_csv(file).reset_index(drop=True)
+    train["is_leave_sample"] = train.index % downsample_rate == 0
     train, features = series_generate_features(train)
     return train, features
 
 
-def generate_1st_stage_features(files: List[str]) -> Tuple[pd.DataFrame, Features]:
+def generate_1st_stage_features(
+    files: List[str], downsample_rate: int = 1, pbar: bool = True
+) -> Tuple[pd.DataFrame, Features]:
     with Pool(CFG["env"]["num_threads"]) as pool:
-        results = list(tqdm(pool.imap(read_and_generate_features, files), total=len(files), desc="generate features"))
+        if pbar:
+            results = list(
+                tqdm(
+                    pool.imap(read_and_generate_features, [(f, downsample_rate) for f in files]),
+                    total=len(files),
+                    desc="generate features",
+                )
+            )
+        else:
+            results = list(pool.imap(read_and_generate_features, [(f, downsample_rate) for f in files]))
     dfs, features = zip(*results)
     train = pd.concat(dfs)
     features = features[0]
