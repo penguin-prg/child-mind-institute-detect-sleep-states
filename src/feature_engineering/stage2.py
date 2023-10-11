@@ -99,18 +99,9 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
 
         shift_features_dic[dt] = shift_features
 
-    # 一定stepで集約
-    series_id = train["series_id"].values[0]
-    agg_freq = CFG["feature"]["agg_freq"]
-    columns = features.all_features() + ["target", "step"]
-    train = train[columns].groupby(train["step"].values // agg_freq).mean()
-    train["series_id"] = series_id
-    train["target"] = train["target"].round().astype(int)
-
     # shift
     for dt, shift_features in shift_features_dic.items():
         for c in [-10, -5, -2, -1, -0.5, 0.5, 1, 2, 5, 10]:
-            c /= CFG["feature"]["agg_freq"]
             _dt = int(dt * c)
             if _dt == 0:
                 continue
@@ -118,7 +109,11 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
             train[f_names] = train[shift_features].shift(_dt)
             features.add_num_features(f_names)
 
+    # 一定stepで集約
+    train = train[train["is_leave_sample"] == True].reset_index(drop=True)
+
     # next_candsにないstepは除外
+    series_id = train["series_id"].values[0]
     if series_id in next_cands:
         cands = next_cands[series_id]
         train["reduce_step"] = train["step"].astype(int)
@@ -129,15 +124,28 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     return train, features
 
 
-def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
-    train = pd.read_csv(file)
+def read_and_generate_features(file_rate: Tuple[str, int]) -> Tuple[pd.DataFrame, Features]:
+    file, downsample_rate = file_rate
+    train = pd.read_csv(file).reset_index(drop=True)
+    train["is_leave_sample"] = train.index % downsample_rate == 0
     train, features = series_generate_features(train)
     return train, features
 
 
-def generate_2nd_stage_features(files: List[str]) -> Tuple[pd.DataFrame, Features]:
-    with Pool(CFG["env"]["num_threads"]) as pool:
-        results = list(tqdm(pool.imap(read_and_generate_features, files), total=len(files), desc="generate features"))
+def generate_2nd_stage_features(
+    files: List[str], downsample_rate: int = 1, pbar: bool = True
+) -> Tuple[pd.DataFrame, Features]:
+    with Pool(8) as pool:
+        if pbar:
+            results = list(
+                tqdm(
+                    pool.imap(read_and_generate_features, [(f, downsample_rate) for f in files]),
+                    total=len(files),
+                    desc="generate features",
+                )
+            )
+        else:
+            results = list(pool.imap(read_and_generate_features, [(f, downsample_rate) for f in files]))
     dfs, features = zip(*results)
     train = pd.concat(dfs)
     features = features[0]
