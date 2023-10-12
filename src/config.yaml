@@ -13,8 +13,8 @@ env:
 
 1st_stage:
     execution:
-        exp_id: exp_071
-        best_exp_id: exp_071
+        exp_id: debug_nb1
+        best_exp_id: debug_nb1
     xgboost:
         objective: binary:logistic
         learning_rate: 0.1

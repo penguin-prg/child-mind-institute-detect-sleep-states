@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from tqdm import tqdm
 from typing import Tuple, List
 import yaml
+import numpy as np
 
 if True:
     PACKAGE_DIR = os.path.join(os.path.dirname(__file__), "../")
@@ -16,71 +17,67 @@ from utils.pandas_utils import reduce_mem_usage
 from utils.feature_contena import Features
 
 
-def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
-    train = train.sort_values("step").reset_index(drop=True)
+def series_generate_features(df: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
+    df = df.sort_values("step").reset_index(drop=True)
 
     features = Features()
 
-    # 時刻
-    timestamp = pd.to_datetime(train["timestamp"].values[0])
-    total_seconds = (timestamp - timestamp.replace(hour=0, minute=0, second=0, microsecond=0)).total_seconds()
-    train["total_seconds"] = (total_seconds + train.index * 5) % (24 * 60 * 60)  # [sec]
-    features.add_num_feature("total_seconds")
+    df["hour"] = df["timestamp"].str[11:13].astype(int)
+    features.add_num_features(["hour"])
 
-    columns = ["anglez", "enmo"]
+    df["lids"] = np.maximum(0.0, df["enmo"] - 0.02)
+    df["lids"] = df["lids"].rolling(120, center=True, min_periods=1).agg("sum")
+    df["lids"] = 100 / (df["lids"] + 1)
+    df["lids"] = df["lids"].rolling(360, center=True, min_periods=1).agg("mean").astype(np.float32)
+    features.add_num_features(["lids"])
 
-    # その人のその時刻での平均的な測定値
-    gb = train.groupby("total_seconds")[columns].mean()
-    gb.columns = [f"{c}_mean" for c in columns]
-    train["anglez_mean"] = train["total_seconds"].map(gb["anglez_mean"])
-    train["enmo_mean"] = train["total_seconds"].map(gb["enmo_mean"])
-    features.add_num_features(gb.columns.tolist())
-    columns += gb.columns.tolist()
+    df["enmo"] = (df["enmo"] * 1000).astype(np.int16)
+    df["anglez"] = df["anglez"].astype(np.int16)
+    df["anglezdiffabs"] = df["anglez"].diff().abs().astype(np.float32)
+    features.add_num_features(["enmo", "anglez", "anglezdiffabs"])
 
-    # diff
-    f_names = [f"{c}_diff_abs" for c in columns]
-    train[f_names] = train[columns].diff().abs()
-    features.add_num_features(f_names)
-    columns += f_names
+    for col in ["enmo", "anglez", "anglezdiffabs"]:
+        # periods in seconds
+        periods = [60, 360, 720]
 
-    # rolling
-    dts = [10, 50, 100, 1000]
-    for dt in dts:
-        f_names = [f"{c}_rolling_mean_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).mean()
-        features.add_num_features(f_names)
+        for n in periods:
+            rol_args = {"window": int((n + 5) // 5), "min_periods": 1, "center": True}
 
-        f_names = [f"{c}_rolling_std_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).std()
-        features.add_num_features(f_names)
+            for agg in ["median", "mean", "max", "min", "var"]:
+                df[f"{col}_{agg}_{n}"] = df[col].rolling(**rol_args).agg(agg).astype(np.float32).values
+                gc.collect()
+                features.add_num_features([f"{col}_{agg}_{n}"])
 
-        f_names = [f"{c}_rolling_max_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).max()
-        features.add_num_features(f_names)
+            if n == max(periods):
+                df[f"{col}_mad_{n}"] = (
+                    (df[col] - df[f"{col}_median_{n}"]).abs().rolling(**rol_args).median().astype(np.float32)
+                )
+                features.add_num_features([f"{col}_mad_{n}"])
 
-        f_names = [f"{c}_rolling_min_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).min()
-        features.add_num_features(f_names)
+            df[f"{col}_amplit_{n}"] = df[f"{col}_max_{n}"] - df[f"{col}_min_{n}"]
+            df[f"{col}_amplit_{n}_min"] = df[f"{col}_amplit_{n}"].rolling(**rol_args).min().astype(np.float32).values
+            features.add_num_features([f"{col}_amplit_{n}", f"{col}_amplit_{n}_min"])
 
-        f_names = [f"{c}_rolling_median_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).median()
-        features.add_num_features(f_names)
+            df[f"{col}_diff_{n}_max"] = df[f"{col}_max_{n}"].diff().abs().rolling(**rol_args).max().astype(np.float32)
+            df[f"{col}_diff_{n}_mean"] = df[f"{col}_max_{n}"].diff().abs().rolling(**rol_args).mean().astype(np.float32)
+            features.add_num_features([f"{col}_diff_{n}_max", f"{col}_diff_{n}_mean"])
 
-        f_names = [f"{c}_rolling_square_mean_{dt}" for c in columns]
-        train[f_names] = (train[columns] ** 2).rolling(dt, center=True).mean()
-        features.add_num_features(f_names)
+            gc.collect()
+
+    for f in features.num_features():
+        df[f] = df[f].astype(np.float32)
 
     # 一定stepで集約
-    series_id = train["series_id"].values[0]
+    series_id = df["series_id"].values[0]
     agg_freq = CFG["feature"]["agg_freq"]
     columns = features.all_features() + ["target", "step"]
-    train = train[columns].groupby(train["step"].values // agg_freq).mean()
-    train["series_id"] = series_id
-    train["target"] = train["target"].round().astype(int)
+    df = df[columns].groupby(df["step"].values // agg_freq).mean()
+    df["series_id"] = series_id
+    df["target"] = df["target"].round().astype(int)
 
-    train = reduce_mem_usage(train)
+    df = reduce_mem_usage(df)
     gc.collect()
-    return train, features
+    return df, features
 
 
 def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
