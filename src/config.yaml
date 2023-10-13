@@ -27,10 +27,10 @@ env:
 
 2nd_stage:
     execution:
-        exp_id: exp_072
+        exp_id: exp_080
         best_exp_id: exp_072
     xgboost:
-        objective: binary:logistic
+        objective: reg:squarederror
         learning_rate: 0.1
         reg_alpha: 0.02
         reg_lambda: 0.2

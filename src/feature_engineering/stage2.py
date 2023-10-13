@@ -102,7 +102,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     # 一定stepで集約
     series_id = train["series_id"].values[0]
     agg_freq = CFG["feature"]["agg_freq"]
-    columns = features.all_features() + ["target", "step"]
+    columns = features.all_features() + ["target", "step", "onset_target", "wakeup_target"]
     train = train[columns].groupby(train["step"].values // agg_freq).mean()
     train["series_id"] = series_id
     train["target"] = train["target"].round().astype(int)
