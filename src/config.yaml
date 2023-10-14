@@ -27,11 +27,11 @@ env:
 
 2nd_stage:
     execution:
-        exp_id: exp_072
-        best_exp_id: exp_072
+        exp_id: exp_083
+        best_exp_id: exp_083
     xgboost:
-        objective: binary:logistic
-        learning_rate: 0.1
+        objective: reg:squarederror
+        learning_rate: 0.01
         reg_alpha: 0.02
         reg_lambda: 0.2
         random_state: 42
@@ -43,31 +43,3 @@ gru:
     execution:
         exp_id: exp_081
         best_exp_id: exp_081
-
-regressor:
-    execution:
-        exp_id: exp_073
-        best_exp_id: exp_073
-    xgboost:
-        objective: reg:squarederror
-        learning_rate: 0.01
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 7
-        colsample_bytree: 0.5
-        tree_method: gpu_hist
-
-ranker:
-    execution:
-        exp_id: exp_075
-        best_exp_id: exp_075
-    xgboost:
-        objective: reg:squarederror
-        learning_rate: 0.01
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 7
-        colsample_bytree: 0.5
-        tree_method: gpu_hist
