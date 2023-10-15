@@ -2,9 +2,42 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+import torch.nn.functional as F
 
 import pytorch_lightning as pl
 from torchmetrics import MetricCollection
+
+
+class WaveBlock(nn.Module):
+    """from https://www.kaggle.com/hanjoonchoe/wavenet-lstm-pytorch-ignite-ver"""
+
+    def __init__(self, in_channels, out_channels, dilation_rates):
+        super(WaveBlock, self).__init__()
+        self.num_rates = dilation_rates
+        self.convs = nn.ModuleList()
+        self.filter_convs = nn.ModuleList()
+        self.gate_convs = nn.ModuleList()
+
+        self.convs.append(nn.Conv1d(in_channels, out_channels, kernel_size=1))
+        dilation_rates = [2**i for i in range(dilation_rates)]
+        for dilation_rate in dilation_rates:
+            self.filter_convs.append(
+                nn.Conv1d(out_channels, out_channels, kernel_size=3, padding=dilation_rate, dilation=dilation_rate)
+            )
+            self.gate_convs.append(
+                nn.Conv1d(out_channels, out_channels, kernel_size=3, padding=dilation_rate, dilation=dilation_rate)
+            )
+            self.convs.append(nn.Conv1d(out_channels, out_channels, kernel_size=1))
+
+    def forward(self, x):
+        x = self.convs[0](x)
+        res = x
+        for i in range(self.num_rates):
+            x = F.tanh(self.filter_convs[i](x)) * F.sigmoid(self.gate_convs[i](x))
+            x = self.convs[i + 1](x)
+            # x += res
+            res = torch.add(res, x)
+        return res
 
 
 class ZzzGRUModule(pl.LightningModule):
@@ -24,6 +57,13 @@ class ZzzGRUModule(pl.LightningModule):
 
         self.numerical_linear = nn.Sequential(
             nn.Linear(input_numerical_size, numeraical_linear_size), nn.LayerNorm(numeraical_linear_size)
+        )
+
+        self.wavenet = nn.Sequential(
+            WaveBlock(numeraical_linear_size, 16, 4),
+            WaveBlock(16, 32, 4),
+            WaveBlock(32, 64, 2),
+            WaveBlock(64, numeraical_linear_size, 1),
         )
 
         self.rnn = nn.GRU(numeraical_linear_size, model_size, num_layers=2, batch_first=True, bidirectional=True)
@@ -65,10 +105,15 @@ class ZzzGRUModule(pl.LightningModule):
                     p.data.fill_(0)
 
     def forward(self, feat):
-        numerical_embedding = self.numerical_linear(feat)
-        output, _ = self.rnn(numerical_embedding)
-        output = self.linear_out(output)
-        return output
+        x = self.numerical_linear(feat)
+
+        x = x.permute(0, 2, 1)
+        x = self.wavenet(x)
+        x = x.permute(0, 2, 1)
+
+        x, _ = self.rnn(x)
+        x = self.linear_out(x)
+        return x
 
     def training_step(self, batch, batch_idx):
         X, y = batch
