@@ -41,7 +41,7 @@ env:
 
 gru:
     execution:
-        exp_id: exp_085
+        exp_id: exp_086
         best_exp_id: exp_081
         seq_len: 10000
 
