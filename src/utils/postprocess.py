@@ -7,6 +7,8 @@ import yaml
 import matplotlib.pyplot as plt
 import gc
 from typing import Optional
+from scipy.interpolate import interp1d
+
 
 if True:
     PACKAGE_DIR = os.path.join(os.path.dirname(__file__), "../")
@@ -101,3 +103,44 @@ def post_process(train: pd.DataFrame, output_dir: Optional[str] = None) -> pd.Da
     del dfs
     gc.collect()
     return sub
+
+
+def dynamic_range_nms(df: pd.DataFrame) -> pd.DataFrame:
+    """Dynamic-Range NMS
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        単一のseries_idに対する提出形式
+    """
+    score2range = interp1d(
+        [-100, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100],
+        [0, 0, 12, 36, 60, 90, 120, 150, 180, 240, 300, 360, 360],
+    )
+    range2score = interp1d(
+        [0, 12, 36, 60, 90, 120, 150, 180, 240, 300, 360],
+        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    )
+
+    df = df.sort_values("score", ascending=False).reset_index(drop=True)
+    used = []
+    used_scores = []
+    reduce_rate = np.ones(df["step"].max() + 500)
+    for _ in range(min(len(df), 1000)):
+        df["reduced_score"] = df["score"] / reduce_rate[df["step"]]
+        best_score = df["reduced_score"].max()
+        best_idx = df["reduced_score"].idxmax()
+        best_step = df.loc[best_idx, "step"]
+        used.append(best_idx)
+        used_scores.append(best_score)
+
+        range_ = score2range(best_score)
+        for r in range(1, int(range_)):
+            reduce = range2score(range_ - r) + 1
+            reduce_rate[best_step + r] = max(reduce_rate[best_step + r], reduce)
+            if best_step - r >= 0:
+                reduce_rate[best_step - r] = max(reduce_rate[best_step - r], reduce)
+        reduce_rate[best_step] = 1e10
+    df = df.iloc[used].copy()
+    df["reduced_score"] = used_scores
+    return df
