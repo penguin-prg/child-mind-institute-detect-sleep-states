@@ -43,7 +43,7 @@ class WaveBlock(nn.Module):
         return res
 
 
-class ZzzGRUModule(pl.LightningModule):
+class ZzzWaveGRUModule(pl.LightningModule):
     def __init__(
         self,
         dropout=0.2,
@@ -59,7 +59,8 @@ class ZzzGRUModule(pl.LightningModule):
         super().__init__()
 
         self.numerical_linear = nn.Sequential(
-            nn.Linear(input_numerical_size, numeraical_linear_size), nn.LayerNorm(numeraical_linear_size)
+            nn.Linear(input_numerical_size, numeraical_linear_size),
+            nn.LayerNorm(numeraical_linear_size),
         )
 
         self.wavenet = nn.Sequential(
