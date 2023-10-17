@@ -236,7 +236,7 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         max_len,
         dropout=0.2,
         input_numerical_size=2,
-        numeraical_linear_size=64,
+        numeraical_linear_size=84,
         model_size=128,
         linear_out=128,
         out_size=2,
@@ -247,16 +247,23 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         super().__init__()
 
         self.numerical_linear = nn.Sequential(
-            nn.Linear(input_numerical_size, numeraical_linear_size), nn.LayerNorm(numeraical_linear_size)
+            nn.Linear(input_numerical_size, numeraical_linear_size),
+            nn.LayerNorm(numeraical_linear_size),
         )
 
         self.pe = PositionalEncoding(numeraical_linear_size, dropout=0.0, max_len=max_len, batch_first=True)
         self.transformer = nn.Sequential(
             nn.TransformerEncoderLayer(
-                d_model=numeraical_linear_size, nhead=4, dropout=0.0, dim_feedforward=256, batch_first=True
+                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=256, batch_first=True
             ),
             nn.TransformerEncoderLayer(
-                d_model=numeraical_linear_size, nhead=4, dropout=0.0, dim_feedforward=256, batch_first=True
+                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=256, batch_first=True
+            ),
+            nn.TransformerEncoderLayer(
+                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=256, batch_first=True
+            ),
+            nn.TransformerEncoderLayer(
+                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=256, batch_first=True
             ),
         )
 

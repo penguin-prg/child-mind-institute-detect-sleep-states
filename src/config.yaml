@@ -45,6 +45,13 @@ gru:
         best_exp_id: exp_086
         seq_len: 10000
 
+patch_model:
+    execution:
+        exp_id: exp_087
+        best_exp_id: exp_087
+        block_size: 10008 # 12 x 834
+        patch_size: 12
+
 ensemble:
     execution:
         exp_id: exp_084
