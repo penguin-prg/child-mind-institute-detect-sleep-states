@@ -113,19 +113,10 @@ def dynamic_range_nms(df: pd.DataFrame) -> pd.DataFrame:
     df : pd.DataFrame
         単一のseries_idに対する提出形式
     """
-    score2range = interp1d(
-        [-100, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100],
-        [0, 0, 12, 36, 60, 90, 120, 150, 180, 240, 300, 360, 360],
-    )
-    range2score = interp1d(
-        [0, 12, 36, 60, 90, 120, 150, 180, 240, 300, 360],
-        [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    )
-
     df = df.sort_values("score", ascending=False).reset_index(drop=True)
     used = []
     used_scores = []
-    reduce_rate = np.ones(df["step"].max() + 500)
+    reduce_rate = np.ones(df["step"].max() + 1000)
     for _ in range(min(len(df), 1000)):
         df["reduced_score"] = df["score"] / reduce_rate[df["step"]]
         best_score = df["reduced_score"].max()
@@ -134,12 +125,12 @@ def dynamic_range_nms(df: pd.DataFrame) -> pd.DataFrame:
         used.append(best_idx)
         used_scores.append(best_score)
 
-        range_ = score2range(best_score)
+        range_ = 360
         for r in range(1, int(range_)):
-            reduce = range2score(range_ - r) + 1
-            reduce_rate[best_step + r] = max(reduce_rate[best_step + r], reduce)
+            reduce = ((range_ - r) / range_) ** 2 * 10
+            reduce_rate[best_step + r] += reduce
             if best_step - r >= 0:
-                reduce_rate[best_step - r] = max(reduce_rate[best_step - r], reduce)
+                reduce_rate[best_step - r] += reduce
         reduce_rate[best_step] = 1e10
     df = df.iloc[used].copy()
     df["reduced_score"] = used_scores
