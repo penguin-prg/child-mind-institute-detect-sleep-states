@@ -47,10 +47,14 @@ gru:
 
 patch_model:
     execution:
-        exp_id: exp_087
+        exp_id: exp_088
         best_exp_id: exp_087
         block_size: 10008 # 12 x 834
         patch_size: 12
+        stride_rate: 8
+        epoch: 5
+        bs: 32
+        lr: 0.001
 
 ensemble:
     execution:

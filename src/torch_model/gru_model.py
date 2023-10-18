@@ -10,6 +10,8 @@ import torch.nn.functional as F
 import pytorch_lightning as pl
 from torchmetrics import MetricCollection
 
+from transformers import AdamW, get_linear_schedule_with_warmup
+
 
 class WaveBlock(nn.Module):
     """from https://www.kaggle.com/hanjoonchoe/wavenet-lstm-pytorch-ignite-ver"""
@@ -55,6 +57,7 @@ class ZzzWaveGRUModule(pl.LightningModule):
         loss_fn=nn.CrossEntropyLoss(),
         lr=0.001,
         weight_decay=0,
+        total_steps=1000,
     ):
         super().__init__()
 
@@ -83,6 +86,7 @@ class ZzzWaveGRUModule(pl.LightningModule):
         self.loss_fn = loss_fn
         self.lr = lr
         self.weight_decay = weight_decay
+        self.total_steps = total_steps
 
         self.train_metrics = MetricCollection([], prefix="")
         self.valid_metrics = MetricCollection([], prefix="val_")
@@ -178,8 +182,12 @@ class ZzzWaveGRUModule(pl.LightningModule):
         self.print_metric(preds, labels, "valid")
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=3, verbose=True)
+        optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=0,
+            num_training_steps=self.total_steps,
+        )
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
     def print_metric(self, y_hat, y, train_or_valid="train"):
@@ -243,6 +251,7 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         loss_fn=nn.CrossEntropyLoss(),
         lr=0.001,
         weight_decay=0,
+        total_steps=1000,
     ):
         super().__init__()
 
@@ -280,6 +289,7 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         self.loss_fn = loss_fn
         self.lr = lr
         self.weight_decay = weight_decay
+        self.total_steps = total_steps
 
         self.train_metrics = MetricCollection([], prefix="")
         self.valid_metrics = MetricCollection([], prefix="val_")
@@ -374,8 +384,12 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         self.print_metric(preds, labels, "valid")
 
     def configure_optimizers(self):
-        optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=3, verbose=True)
+        optimizer = AdamW(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=0,
+            num_training_steps=self.total_steps,
+        )
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
     def print_metric(self, y_hat, y, train_or_valid="train"):
