@@ -48,7 +48,7 @@ gru:
 patch_model:
     execution:
         exp_id: exp_090
-        best_exp_id: exp_089
+        best_exp_id: exp_090
         block_size: 9600 # 12 x 8 * 1000
         patch_size: 12
 
