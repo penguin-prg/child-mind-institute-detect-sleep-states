@@ -84,7 +84,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
 
 
 def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
-    train = pd.read_csv(file)
+    train = pd.read_parquet(file)
     train, features = series_generate_features(train)
     return train, features
 
