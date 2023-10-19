@@ -51,6 +51,11 @@ patch_model:
         best_exp_id: exp_090
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
+    params:
+        numeraical_linear_size: 168
+        num_layers: 4
+        dim_feedforward: 128
+        model_size: 128
 
 ensemble:
     execution:

@@ -234,11 +234,13 @@ class ZzzTransformerGRUModule(pl.LightningModule):
     def __init__(
         self,
         max_len,
-        dropout=0.2,
+        dropout=0.0,
         input_numerical_size=2,
-        numeraical_linear_size=84,
-        model_size=128,
-        linear_out=128,
+        numeraical_linear_size=84,  # TF
+        num_layers=4,  # TF
+        dim_feedforward=128,  # TF
+        model_size=128,  # GRU
+        linear_out=128,  # head
         out_size=2,
         loss_fn=nn.CrossEntropyLoss(),
         lr=0.001,
@@ -253,18 +255,16 @@ class ZzzTransformerGRUModule(pl.LightningModule):
 
         self.pe = PositionalEncoding(numeraical_linear_size, dropout=0.0, max_len=max_len, batch_first=True)
         self.transformer = nn.Sequential(
-            nn.TransformerEncoderLayer(
-                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=128, batch_first=True
-            ),
-            nn.TransformerEncoderLayer(
-                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=128, batch_first=True
-            ),
-            nn.TransformerEncoderLayer(
-                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=128, batch_first=True
-            ),
-            nn.TransformerEncoderLayer(
-                d_model=numeraical_linear_size, nhead=6, dropout=0.0, dim_feedforward=128, batch_first=True
-            ),
+            *[
+                nn.TransformerEncoderLayer(
+                    d_model=numeraical_linear_size,
+                    nhead=6,
+                    dropout=0.0,
+                    dim_feedforward=dim_feedforward,
+                    batch_first=True,
+                )
+                for _ in range(num_layers)
+            ]
         )
 
         self.rnn = nn.GRU(numeraical_linear_size, model_size, num_layers=2, batch_first=True, bidirectional=True)
