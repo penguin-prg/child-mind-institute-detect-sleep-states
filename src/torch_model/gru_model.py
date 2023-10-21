@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import torch.nn.functional as F
+from transformers import get_cosine_schedule_with_warmup
 
 import pytorch_lightning as pl
 from torchmetrics import MetricCollection
@@ -244,6 +245,7 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         out_size=2,
         loss_fn=nn.CrossEntropyLoss(),
         lr=0.001,
+        num_training_steps=1000,
         weight_decay=0,
     ):
         super().__init__()
@@ -280,6 +282,7 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         self.loss_fn = loss_fn
         self.lr = lr
         self.weight_decay = weight_decay
+        self.num_training_steps = num_training_steps
 
         self.train_metrics = MetricCollection([], prefix="")
         self.valid_metrics = MetricCollection([], prefix="val_")
@@ -375,7 +378,8 @@ class ZzzTransformerGRUModule(pl.LightningModule):
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
-        scheduler = ReduceLROnPlateau(optimizer, factor=0.1, patience=3, verbose=True)
+        scheduler = get_cosine_schedule_with_warmup(optimizer, 0, self.num_training_steps)
+
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "val_loss"}
 
     def print_metric(self, y_hat, y, train_or_valid="train"):
