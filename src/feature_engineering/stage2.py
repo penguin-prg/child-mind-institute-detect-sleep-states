@@ -59,6 +59,10 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train[f_names] = train[columns].diff().abs()
     features.add_num_features(f_names)
 
+    # diff abs clip
+    train["anglez_diff_abs_clip5"] = train["anglez_diff_abs"].clip(0, 5)
+    features.add_num_features(["anglez_diff_abs_clip5"])
+
     # 一定stepで集約
     series_id = train["series_id"].values[0]
     agg_freq = CFG["2nd_stage"]["execution"]["agg_freq"]
@@ -69,7 +73,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train = train.reset_index(drop=True)
 
     # rolling
-    columns = ["enmo"] + ["anglez_diff_abs"]
+    columns = ["enmo", "anglez_diff_abs", "anglez_diff_abs_clip5"]
     dts = [1, 3, 5, 10, 30, 100]
     shift_features_dic = {}
     for dt in dts:

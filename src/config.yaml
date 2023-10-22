@@ -27,7 +27,7 @@ env:
 
 2nd_stage:
     execution:
-        exp_id: exp_095
+        exp_id: exp_096
         best_exp_id: exp_095
         agg_freq: 24 # [step]
     xgboost:
