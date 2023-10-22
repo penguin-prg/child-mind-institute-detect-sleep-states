@@ -67,13 +67,28 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     series_id = train["series_id"].values[0]
     agg_freq = CFG["2nd_stage"]["execution"]["agg_freq"]
     columns = features.all_features() + ["target", "step", "onset_target", "wakeup_target"]
-    train = train[columns].groupby(train["step"].values // agg_freq).mean()
+    train_mean = train[columns].groupby(train["step"].values // agg_freq).mean()
+    columns = features.all_features() + ["step"]
+    train_std = train[columns].groupby(train["step"].values // agg_freq).std()
+    # TODO: addしてない
+    train_std = train_std.drop(columns=["step"])
+    train_std.columns = [f"{c}_std" for c in train_std.columns]
+    train = pd.concat([train_mean, train_std], axis=1)
+    del train_mean, train_std
+    gc.collect()
     train["series_id"] = series_id
     train["target"] = train["target"].round().astype(int)
     train = train.reset_index(drop=True)
 
     # rolling
-    columns = ["enmo", "anglez_diff_abs", "anglez_diff_abs_clip5"]
+    columns = [
+        "enmo",
+        # "anglez_diff_abs",
+        "anglez_diff_abs_clip5",
+        "enmo_std",
+        # "anglez_diff_abs_std",
+        "anglez_diff_abs_clip5_std",
+    ]
     dts = [1, 3, 5, 10, 30, 100]
     shift_features_dic = {}
     for dt in dts:

@@ -27,8 +27,8 @@ env:
 
 2nd_stage:
     execution:
-        exp_id: exp_096
-        best_exp_id: exp_095
+        exp_id: exp_097
+        best_exp_id: exp_097
         agg_freq: 24 # [step]
     xgboost:
         objective: reg:squarederror
@@ -39,12 +39,6 @@ env:
         max_depth: 5
         colsample_bytree: 0.7
         tree_method: gpu_hist
-
-gru:
-    execution:
-        exp_id: exp_086
-        best_exp_id: exp_086
-        seq_len: 10000
 
 patch_model:
     execution:
