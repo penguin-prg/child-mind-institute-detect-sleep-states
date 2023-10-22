@@ -68,10 +68,9 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train["target"] = train["target"].round().astype(int)
     train = train.reset_index(drop=True)
 
-    columns = ["anglez", "enmo"] + ["anglez_diff_abs", "enmo_diff_abs"]
-
     # rolling
-    dts = [1, 5, 10, 100]
+    columns = ["enmo"] + ["anglez_diff_abs"]
+    dts = [1, 3, 5, 10, 30, 100]
     shift_features_dic = {}
     for dt in dts:
         shift_features = []
