@@ -34,6 +34,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     features.add_num_features(["total_seconds", "minutes"])
 
     columns = ["anglez", "enmo"]
+    features.add_num_features(columns)
 
     # その人のその時刻での平均的な測定値
     gb = train.groupby("total_seconds")[columns].mean()
@@ -59,7 +60,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     features.add_num_features(f_names)
 
     columns += f_names
-    columns += gb.columns.tolist()
+    # columns += gb.columns.tolist()
 
     # rolling
     dts = [10, 50, 100, 1000]
@@ -82,10 +83,10 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         features.add_num_features(f_names)
         shift_features += f_names
 
-        f_names = [f"{c}_rolling_min_{dt}" for c in columns]
-        train[f_names] = train[columns].rolling(dt, center=True).min()
-        features.add_num_features(f_names)
-        shift_features += f_names
+        # f_names = [f"{c}_rolling_min_{dt}" for c in columns]
+        # train[f_names] = train[columns].rolling(dt, center=True).min()
+        # features.add_num_features(f_names)
+        # shift_features += f_names
 
         f_names = [f"{c}_rolling_median_{dt}" for c in columns]
         train[f_names] = train[columns].rolling(dt, center=True).median()
@@ -101,7 +102,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
 
     # 一定stepで集約
     series_id = train["series_id"].values[0]
-    agg_freq = CFG["feature"]["agg_freq"]
+    agg_freq = CFG["2nd_stage"]["execution"]["agg_freq"]
     columns = features.all_features() + ["target", "step", "onset_target", "wakeup_target"]
     train = train[columns].groupby(train["step"].values // agg_freq).mean()
     train["series_id"] = series_id
@@ -132,6 +133,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
 def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
     train = pd.read_parquet(file)
     train, features = series_generate_features(train)
+    gc.collect()
     return train, features
 
 
