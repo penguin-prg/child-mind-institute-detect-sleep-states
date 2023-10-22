@@ -231,6 +231,26 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 
+def create_sparse_attention_mask(seq_len):
+    # いったん全部マスクする
+    mask = torch.ones(seq_len, seq_len) * float("-inf")
+
+    # 対角成分を中心に1/4だけマスクを外す
+    quarter_len = seq_len // 4
+    for i in range(seq_len):
+        start = max(0, i - quarter_len // 2)
+        end = min(seq_len, i + quarter_len // 2 + 1)
+        mask[i, start:end] = 0
+
+    # stride間隔でマスクを外す
+    stride = 5
+    for i in range(0, seq_len, stride):
+        for j in range(0, seq_len, stride):
+            mask[i, j] = 0
+
+    return mask
+
+
 class ZzzTransformerGRUModule(pl.LightningModule):
     def __init__(
         self,
@@ -256,8 +276,8 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         )
 
         self.pe = PositionalEncoding(numeraical_linear_size, dropout=0.0, max_len=max_len, batch_first=True)
-        self.transformer = nn.Sequential(
-            *[
+        self.transformer = nn.ModuleList(
+            [
                 nn.TransformerEncoderLayer(
                     d_model=numeraical_linear_size,
                     nhead=6,
@@ -278,6 +298,8 @@ class ZzzTransformerGRUModule(pl.LightningModule):
             nn.Linear(linear_out, out_size),
         )
         self._reinitialize()
+
+        self.attention_mask = create_sparse_attention_mask(max_len).to("cuda")
 
         self.loss_fn = loss_fn
         self.lr = lr
@@ -312,7 +334,8 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         x = self.numerical_linear(x)
 
         x = self.pe(x)
-        x = self.transformer(x)
+        for layer in self.transformer:
+            x = layer(x, src_mask=self.attention_mask)
 
         x, _ = self.rnn(x)
         x = self.linear_out(x)
