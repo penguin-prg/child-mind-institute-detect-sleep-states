@@ -59,11 +59,19 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train[f_names] = train[columns].diff().abs()
     features.add_num_features(f_names)
 
-    columns += f_names
-    # columns += gb.columns.tolist()
+    # 一定stepで集約
+    series_id = train["series_id"].values[0]
+    agg_freq = CFG["2nd_stage"]["execution"]["agg_freq"]
+    columns = features.all_features() + ["target", "step", "onset_target", "wakeup_target"]
+    train = train[columns].groupby(train["step"].values // agg_freq).mean()
+    train["series_id"] = series_id
+    train["target"] = train["target"].round().astype(int)
+    train = train.reset_index(drop=True)
+
+    columns = ["anglez", "enmo"] + ["anglez_diff_abs", "enmo_diff_abs"]
 
     # rolling
-    dts = [10, 50, 100, 1000]
+    dts = [1, 5, 10, 100]
     shift_features_dic = {}
     for dt in dts:
         shift_features = []
@@ -83,11 +91,6 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         features.add_num_features(f_names)
         shift_features += f_names
 
-        # f_names = [f"{c}_rolling_min_{dt}" for c in columns]
-        # train[f_names] = train[columns].rolling(dt, center=True).min()
-        # features.add_num_features(f_names)
-        # shift_features += f_names
-
         f_names = [f"{c}_rolling_median_{dt}" for c in columns]
         train[f_names] = train[columns].rolling(dt, center=True).median()
         features.add_num_features(f_names)
@@ -100,21 +103,14 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
 
         shift_features_dic[dt] = shift_features
 
-    # 一定stepで集約
-    series_id = train["series_id"].values[0]
-    agg_freq = CFG["2nd_stage"]["execution"]["agg_freq"]
-    columns = features.all_features() + ["target", "step", "onset_target", "wakeup_target"]
-    train = train[columns].groupby(train["step"].values // agg_freq).mean()
-    train["series_id"] = series_id
-    train["target"] = train["target"].round().astype(int)
-
     # shift
     for dt, shift_features in shift_features_dic.items():
+        used = set()
         for c in [-10, -5, -2, -1, -0.5, 0.5, 1, 2, 5, 10]:
-            c /= CFG["feature"]["agg_freq"]
             _dt = int(dt * c)
-            if _dt == 0:
+            if _dt == 0 or _dt in used:
                 continue
+            used.add(_dt)
             f_names = [f"{c}_shift_{_dt}" for c in shift_features]
             train[f_names] = train[shift_features].shift(_dt)
             features.add_num_features(f_names)
