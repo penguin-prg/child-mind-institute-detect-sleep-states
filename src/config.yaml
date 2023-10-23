@@ -52,6 +52,21 @@ patch_model:
         dim_feedforward: 128
         model_size: 128
 
+ranker:
+    execution:
+        exp_id: exp_098
+        best_exp_id: None
+        agg_freq: 24 # [step]
+    xgboost:
+        objective: reg:squarederror
+        learning_rate: 0.01
+        reg_alpha: 0.02
+        reg_lambda: 0.2
+        random_state: 42
+        max_depth: 5
+        colsample_bytree: 0.7
+        tree_method: gpu_hist
+
 ensemble:
     execution:
         exp_id: exp_084
