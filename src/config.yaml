@@ -52,6 +52,15 @@ patch_model:
         dim_feedforward: 128
         model_size: 128
 
+spectrogram:
+    execution:
+        exp_id: exp_098
+        best_exp_id: None
+        block_size: 3840 # 12step x 320min
+        image_size: 320
+        hop_length: 12
+        n_fft: 639
+
 ensemble:
     execution:
         exp_id: exp_084
