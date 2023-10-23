@@ -55,7 +55,7 @@ patch_model:
 conv1d_gru_model:
     execution:
         exp_id: exp_100
-        best_exp_id: exp_099
+        best_exp_id: exp_100
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
