@@ -439,13 +439,15 @@ class ZzzConv1dGRUModule(pl.LightningModule):
 
         k = 64
         assert numeraical_linear_size % 6 == 0
-        out_ch = numeraical_linear_size // 6
+        out_ch = numeraical_linear_size // 8
         self.c1 = Conv1dBlock(numeraical_linear_size, out_ch, k - 1)
         self.c2 = Conv1dBlock(numeraical_linear_size, out_ch, k * 2 - 1)
         self.c3 = Conv1dBlock(numeraical_linear_size, out_ch, k // 2 - 1)
         self.c4 = Conv1dBlock(numeraical_linear_size, out_ch, k // 4 - 1)
         self.c5 = Conv1dBlock(numeraical_linear_size, out_ch, k * 4 - 1)
-        self.c6 = Conv1dBlock(out_ch * 5 + numeraical_linear_size, numeraical_linear_size, 1)
+        self.c6 = Conv1dBlock(numeraical_linear_size, out_ch, k * 8 - 1)
+        self.c7 = Conv1dBlock(numeraical_linear_size, out_ch, k * 16 - 1)
+        self.c8 = Conv1dBlock(out_ch * 7 + numeraical_linear_size, numeraical_linear_size, 1)
 
         self.rnn = nn.GRU(numeraical_linear_size, model_size, num_layers=2, batch_first=True, bidirectional=True)
         self.linear_out = nn.Sequential(
@@ -472,8 +474,8 @@ class ZzzConv1dGRUModule(pl.LightningModule):
         x = self.numerical_linear(x)
 
         x = x.permute(0, 2, 1)
-        x = torch.cat([self.c1(x), self.c2(x), self.c3(x), self.c4(x), self.c5(x), x], dim=1)
-        x = self.c6(x)
+        x = torch.cat([self.c1(x), self.c2(x), self.c3(x), self.c4(x), self.c5(x), self.c6(x), self.c7(x), x], dim=1)
+        x = self.c8(x)
         x = x.permute(0, 2, 1)
 
         x, _ = self.rnn(x)
