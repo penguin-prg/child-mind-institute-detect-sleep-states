@@ -256,8 +256,8 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         )
 
         self.pe = PositionalEncoding(numeraical_linear_size, dropout=0.0, max_len=max_len, batch_first=True)
-        self.transformer = nn.Sequential(
-            *[
+        self.transformer = nn.ModuleList(
+            [
                 nn.TransformerEncoderLayer(
                     d_model=numeraical_linear_size,
                     nhead=6,
@@ -308,19 +308,23 @@ class ZzzTransformerGRUModule(pl.LightningModule):
                 elif "bias_hh" in name:
                     p.data.fill_(0)
 
-    def forward(self, x):
+    def forward(self, x, mask):
         x = self.numerical_linear(x)
 
         x = self.pe(x)
-        x = self.transformer(x)
+        for layer in self.transformer:
+            x = layer(x, src_key_padding_mask=mask)
 
         x, _ = self.rnn(x)
         x = self.linear_out(x)
+
+        # mask部分を捨てる
+        x = x * (~mask.unsqueeze(-1))
         return x
 
     def training_step(self, batch, batch_idx):
-        X, y = batch
-        preds = self.forward(X)
+        X, mask, y = batch
+        preds = self.forward(X, mask)
 
         loss = self.loss_fn(preds, y)
 
@@ -343,8 +347,8 @@ class ZzzTransformerGRUModule(pl.LightningModule):
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
-        X, y = batch
-        preds = self.forward(X)
+        X, mask, y = batch
+        preds = self.forward(X, mask)
 
         self.val_step_outputs.append(preds)
         self.val_step_labels.append(y)
