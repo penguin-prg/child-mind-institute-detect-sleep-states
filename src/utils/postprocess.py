@@ -9,6 +9,9 @@ import gc
 from typing import Optional
 from scipy.interpolate import interp1d
 
+RANGE = 917
+COEFF = 11
+EXP = 5
 
 if True:
     PACKAGE_DIR = os.path.join(os.path.dirname(__file__), "../")
@@ -125,9 +128,8 @@ def dynamic_range_nms(df: pd.DataFrame) -> pd.DataFrame:
         used.append(best_idx)
         used_scores.append(best_score)
 
-        range_ = 360
-        for r in range(1, int(range_)):
-            reduce = ((range_ - r) / range_) ** 2 * 10
+        for r in range(1, int(RANGE)):
+            reduce = ((RANGE - r) / RANGE) ** EXP * COEFF
             reduce_rate[best_step + r] += reduce
             if best_step - r >= 0:
                 reduce_rate[best_step - r] += reduce
