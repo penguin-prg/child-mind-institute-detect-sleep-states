@@ -1,5 +1,6 @@
 import math
 from torch import Tensor
+from typing import List
 
 import torch
 import torch.nn as nn
@@ -581,3 +582,15 @@ class ZzzConv1dGRUModule(pl.LightningModule):
             v = metrics[name](y_hat, y)
             print(f"{name}={v:.4f}", end=", ")
         print()
+
+
+class EnsembleModel(nn.Module):
+    def __init__(self, models: List[nn.Module]):
+        super().__init__()
+        self.models = nn.ModuleList(models)
+
+    def forward(self, x):
+        preds = [model(x) for model in self.models]
+        preds = torch.stack(preds, dim=0)
+        preds = torch.mean(preds, dim=0)
+        return preds
