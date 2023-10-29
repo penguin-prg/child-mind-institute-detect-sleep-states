@@ -40,7 +40,7 @@ env:
         colsample_bytree: 0.7
         tree_method: gpu_hist
 
-patch_model:
+patch_transformer_gru:
     execution:
         exp_id: exp_105
         best_exp_id: exp_093
@@ -51,6 +51,7 @@ patch_model:
         num_layers: 4
         dim_feedforward: 128
         model_size: 128
+        dropout: 0.0
 
 conv1d_gru_model:
     execution:

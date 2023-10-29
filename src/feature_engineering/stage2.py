@@ -1,12 +1,13 @@
-import pandas as pd
 import gc
-import sys
 import os
-from multiprocessing import Pool
-from tqdm import tqdm
-from typing import Tuple, List
-import yaml
 import pickle
+import sys
+from multiprocessing import Pool
+from typing import List, Tuple
+
+import pandas as pd
+import yaml
+from tqdm import tqdm
 
 if True:
     PACKAGE_DIR = os.path.join(os.path.dirname(__file__), "../")
@@ -17,8 +18,8 @@ if True:
     with open(cand_path, "rb") as f:
         next_cands = pickle.load(f)
 
-from utils.pandas_utils import reduce_mem_usage
 from utils.feature_contena import Features
+from utils.pandas_utils import reduce_mem_usage
 
 
 def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
