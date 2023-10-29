@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List
+from typing import List, Dict, Tuple
 
 import numpy as np
 import pandas as pd
@@ -57,6 +57,48 @@ class ZzzPatchDataset(Dataset):
 
         if self.mode == "train":
             targets = df[["wakeup_target", "onset_target"]].values.astype(np.float32)
+            targets = targets.reshape(max_len // patch_size, patch_size, 2).mean(axis=1)
+            assert targets.shape == (max_len // patch_size, 2)
+            return feats, targets
+        else:
+            return feats
+
+
+class ZzzPatchIndexedDataset(Dataset):
+    def __init__(
+        self,
+        dfs: Dict[str, pd.DataFrame],
+        samples: List[Dict[str, int]],
+        mode: str,
+        features: Features,
+        patch_size: int,
+    ):
+        self.dfs = dfs
+        self.samples = samples
+        self.mode = mode
+        self.features = features
+        self.patch_size = patch_size
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        sample = self.samples[index]
+        sid = sample["series_id"]
+        start = sample["start"]
+        end = sample["end"]
+
+        max_len = end - start
+        patch_size = self.patch_size
+        n_feats = len(self.features.all_features())
+
+        df = self.dfs[sid]
+        feats = df.iloc[start:end][self.features.all_features()].values.astype(np.float32)
+        feats = feats.reshape(max_len // patch_size, patch_size, n_feats)
+        feats = feats.reshape(max_len // patch_size, patch_size * n_feats)
+
+        if self.mode == "train":
+            targets = df.iloc[start:end][["wakeup_target", "onset_target"]].values.astype(np.float32)
             targets = targets.reshape(max_len // patch_size, patch_size, 2).mean(axis=1)
             assert targets.shape == (max_len // patch_size, 2)
             return feats, targets
