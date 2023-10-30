@@ -14,7 +14,9 @@ if True:
     sys.path.append(PACKAGE_DIR)
     CFG = yaml.safe_load(open(os.path.join(PACKAGE_DIR, "config.yaml"), "r"))
 
-    cand_path = os.path.join("/kaggle/output", CFG["xgb_model"]["execution"]["cand_exp_id"], "next_cands.pkl")
+    cand_path = os.path.join(
+        "/kaggle/output", CFG["patch_transformer_gru"]["execution"]["best_exp_id"], "next_cands.pkl"
+    )
     with open(cand_path, "rb") as f:
         next_cands = pickle.load(f)
 

@@ -13,7 +13,6 @@ xgb_model:
         exp_id: exp_107
         best_exp_id: exp_107
         agg_freq: 24 # [step]
-        cand_exp_id: exp_105
     xgboost:
         objective: reg:squarederror
         learning_rate: 0.01
@@ -26,7 +25,7 @@ xgb_model:
 
 patch_transformer_gru:
     execution:
-        exp_id: exp_108
+        exp_id: exp_109
         best_exp_id: exp_108
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
