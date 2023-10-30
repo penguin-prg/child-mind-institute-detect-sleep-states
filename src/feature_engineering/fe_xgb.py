@@ -14,7 +14,7 @@ if True:
     sys.path.append(PACKAGE_DIR)
     CFG = yaml.safe_load(open(os.path.join(PACKAGE_DIR, "config.yaml"), "r"))
 
-    cand_path = os.path.join("/kaggle/output", CFG["1st_stage"]["execution"]["best_exp_id"], "next_cands.pkl")
+    cand_path = os.path.join("/kaggle/output", CFG["xgb_model"]["execution"]["cand_exp_id"], "next_cands.pkl")
     with open(cand_path, "rb") as f:
         next_cands = pickle.load(f)
 
@@ -66,7 +66,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
 
     # 一定stepで集約
     series_id = train["series_id"].values[0]
-    agg_freq = CFG["2nd_stage"]["execution"]["agg_freq"]
+    agg_freq = CFG["xgb_model"]["execution"]["agg_freq"]
     columns = features.all_features() + ["target", "step", "onset_target", "wakeup_target"]
     train_mean = train[columns].groupby(train["step"].values // agg_freq).mean()
     columns = features.all_features() + ["step"]
@@ -152,7 +152,7 @@ def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
     return train, features
 
 
-def generate_2nd_stage_features(files: List[str]) -> Tuple[pd.DataFrame, Features]:
+def generate_features(files: List[str]) -> Tuple[pd.DataFrame, Features]:
     with Pool(CFG["env"]["num_threads"]) as pool:
         results = list(tqdm(pool.imap(read_and_generate_features, files), total=len(files), desc="generate features"))
     dfs, features = zip(*results)

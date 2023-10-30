@@ -4,32 +4,16 @@ dataset:
     train_base_path: /kaggle/input/train_base/train_base.csv
     step_csv_dir: /kaggle/input/save_series_csv/csvs
 
-feature:
-    agg_freq: 24 # [step]
-
 env:
     seed: 46
     num_threads: 30
 
-1st_stage:
+xgb_model:
     execution:
-        exp_id: exp_071
-        best_exp_id: exp_071
-    xgboost:
-        objective: binary:logistic
-        learning_rate: 0.1
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 5
-        colsample_bytree: 0.7
-        tree_method: gpu_hist
-
-2nd_stage:
-    execution:
-        exp_id: exp_097
-        best_exp_id: exp_097
+        exp_id: exp_107
+        best_exp_id: exp_107
         agg_freq: 24 # [step]
+        cand_exp_id: exp_105
     xgboost:
         objective: reg:squarederror
         learning_rate: 0.01
