@@ -43,7 +43,7 @@ env:
 patch_transformer_gru:
     execution:
         exp_id: exp_105
-        best_exp_id: exp_093
+        best_exp_id: exp_105
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
