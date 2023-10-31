@@ -23,6 +23,22 @@ xgb_model:
         colsample_bytree: 0.7
         tree_method: gpu_hist
 
+lgb_model:
+    execution:
+        exp_id: exp_110
+        best_exp_id: exp_110
+        agg_freq: 24 # [step]
+    lightgbm:
+        objective: regression
+        learning_rate: 0.01
+        reg_alpha: 0.02
+        reg_lambda: 0.2
+        random_state: 42
+        max_depth: 7
+        num_leaves: 40
+        colsample_bytree: 0.7
+        n_estimators: 1000000
+
 patch_transformer_gru:
     execution:
         exp_id: exp_109
