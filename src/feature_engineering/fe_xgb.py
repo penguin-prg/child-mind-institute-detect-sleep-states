@@ -73,10 +73,10 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train_mean = train[columns].groupby(train["step"].values // agg_freq).mean()
     columns = features.all_features() + ["step"]
     train_std = train[columns].groupby(train["step"].values // agg_freq).std()
-    # TODO: addしてない
     train_std = train_std.drop(columns=["step"])
     train_std.columns = [f"{c}_std" for c in train_std.columns]
     train = pd.concat([train_mean, train_std], axis=1)
+    features.add_num_features(train_std.columns.tolist())
     del train_mean, train_std
     gc.collect()
     train["series_id"] = series_id
