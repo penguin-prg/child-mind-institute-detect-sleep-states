@@ -3,6 +3,7 @@ dataset:
     cv_split_path: /kaggle/input/cv-split/train_folds.csv
     train_base_path: /kaggle/input/train_base/train_base.csv
     step_csv_dir: /kaggle/input/save_series_csv/csvs
+    step_csv_dir_5min: /kaggle/input/save_series_csv/csvs_5min
 
 env:
     seed: 46
@@ -10,7 +11,7 @@ env:
 
 xgb_model:
     execution:
-        exp_id: exp_113
+        exp_id: exp_114
         best_exp_id: exp_113
         agg_freq: 24 # [step]
     xgboost:
@@ -41,7 +42,7 @@ lgb_model:
 
 patch_transformer_gru:
     execution:
-        exp_id: exp_112
+        exp_id: exp_116
         best_exp_id: exp_112
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
