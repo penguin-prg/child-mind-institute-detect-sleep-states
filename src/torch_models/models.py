@@ -156,7 +156,6 @@ class ZzzConv1dGRUModel(nn.Module):
             nn.Dropout(dropout),
             nn.Linear(linear_out, out_size),
         )
-        self._reinitialize()
 
     def forward(self, x):
         x = self.numerical_linear(x)

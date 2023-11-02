@@ -75,3 +75,14 @@ ensemble:
     execution:
         exp_id: exp_084
         best_exp_id: exp_084
+
+stacking:
+    execution:
+        exp_id: exp_114
+        best_exp_id: exp_114
+        block_size: 19200 # 12 x 8 * 200
+        patch_size: 12
+        models: ["xgb_model", "lgb_model", "patch_transformer_gru"]
+    params:
+        numeraical_linear_size: 168
+        model_size: 128
