@@ -26,7 +26,7 @@ xgb_model:
 lgb_model:
     execution:
         exp_id: exp_117
-        best_exp_id: exp_110
+        best_exp_id: exp_117
         agg_freq: 24 # [step]
     lightgbm:
         objective: regression
