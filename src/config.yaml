@@ -4,6 +4,8 @@ dataset:
     train_base_path: /kaggle/input/train_base/train_base.csv
     step_csv_dir: /kaggle/input/save_series_csv/csvs
     step_csv_dir_5min: /kaggle/input/save_series_csv/csvs_5min
+    step_csv_dir_3min: /kaggle/input/save_series_csv/csvs_3min
+    step_csv_dir_10min: /kaggle/input/save_series_csv/csvs_10min
 
 env:
     seed: 46
@@ -11,8 +13,8 @@ env:
 
 xgb_model:
     execution:
-        exp_id: exp_114
-        best_exp_id: exp_113
+        exp_id: exp_115
+        best_exp_id: exp_115
         agg_freq: 24 # [step]
     xgboost:
         objective: reg:squarederror
