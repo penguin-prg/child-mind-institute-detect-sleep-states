@@ -16,9 +16,9 @@ if True:
     CFG = yaml.safe_load(open(os.path.join(PACKAGE_DIR, "config.yaml"), "r"))
 
 
-RANGE = 261
-COEFF = 28
-EXP = 5
+RANGE = 523
+COEFF = 27
+EXP = 7
 
 
 def dynamic_range_nms(df: pd.DataFrame) -> pd.DataFrame:
