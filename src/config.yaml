@@ -2,7 +2,7 @@ dataset:
     competition_dir: /kaggle/input/child-mind-institute-detect-sleep-states
     cv_split_path: /kaggle/input/cv-split/train_folds.csv
     train_base_path: /kaggle/input/train_base/train_base.csv
-    step_csv_dir: /kaggle/input/save_series_csv/csvs_10min
+    step_csv_dir: /kaggle/input/save_series_csv/csvs_gaussian
 
 env:
     seed: 46
@@ -11,7 +11,7 @@ env:
 xgb_model:
     execution:
         exp_id: exp_116
-        best_exp_id: exp_115
+        best_exp_id: exp_116
         agg_freq: 24 # [step]
     xgboost:
         objective: reg:squarederror
@@ -25,8 +25,8 @@ xgb_model:
 
 lgb_model:
     execution:
-        exp_id: exp_117
-        best_exp_id: exp_117
+        exp_id: exp_120
+        best_exp_id: exp_120
         agg_freq: 24 # [step]
     lightgbm:
         objective: regression
@@ -41,8 +41,8 @@ lgb_model:
 
 patch_transformer_gru:
     execution:
-        exp_id: exp_119
-        best_exp_id: exp_119
+        exp_id: exp_121
+        best_exp_id: exp_121
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
