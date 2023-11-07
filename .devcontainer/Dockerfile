@@ -8,3 +8,5 @@ USER root
 RUN apt install git --yes
 
 # competition specific
+RUN pip uninstall polars --yes
+RUN pip install polars==0.19.2
