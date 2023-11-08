@@ -83,6 +83,10 @@ class ZzzTransformerGRUModel(nn.Module):
         self.numerical_linear = nn.Sequential(
             nn.Linear(input_numerical_size, numeraical_linear_size),
             nn.LayerNorm(numeraical_linear_size),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(numeraical_linear_size, numeraical_linear_size),
+            nn.LayerNorm(numeraical_linear_size),
         )
 
         self.pe = PositionalEncoding(numeraical_linear_size, dropout=0.0, max_len=max_len, batch_first=True)
