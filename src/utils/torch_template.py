@@ -46,7 +46,10 @@ class Conv1dBlock(nn.Module):
 
 
 class WaveBlock(nn.Module):
-    """from https://www.kaggle.com/hanjoonchoe/wavenet-lstm-pytorch-ignite-ver"""
+    """from https://www.kaggle.com/hanjoonchoe/wavenet-lstm-pytorch-ignite-ver
+
+    受容野は2**dilation_ratesくらいかな
+    """
 
     def __init__(self, in_channels, out_channels, dilation_rates):
         super(WaveBlock, self).__init__()

@@ -35,10 +35,14 @@ class ZzzWaveGRUModel(nn.Module):
         self.numerical_linear = nn.Sequential(
             nn.Linear(input_numerical_size, numeraical_linear_size),
             nn.LayerNorm(numeraical_linear_size),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(numeraical_linear_size, numeraical_linear_size),
+            nn.LayerNorm(numeraical_linear_size),
         )
 
         self.wavenet = nn.Sequential(
-            WaveBlock(numeraical_linear_size, 16, 4),
+            WaveBlock(numeraical_linear_size, 16, 8),
             WaveBlock(16, 32, 4),
             WaveBlock(32, 64, 2),
             WaveBlock(64, numeraical_linear_size, 1),
