@@ -15,14 +15,19 @@ def fit_lgb(
     es_rounds=20,
     verbose=100,
     log=True,
+    only_fold0: bool = False,
 ):
     models = []
     oof = np.zeros(len(y), dtype=np.float64)
 
-    if log:
-        bar = tqdm(range(max(folds) + 1))
+    if only_fold0:
+        n_fold = 1
     else:
-        bar = range(max(folds) + 1)
+        n_fold = max(folds) + 1
+    if log:
+        bar = tqdm(range(n_fold))
+    else:
+        bar = range(n_fold)
     for i in bar:
         if log:
             print(f"== fold {i} ==")

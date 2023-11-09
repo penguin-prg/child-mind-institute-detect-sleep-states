@@ -26,19 +26,19 @@ xgb_model:
 
 lgb_model:
     execution:
-        exp_id: exp_120
-        best_exp_id: exp_120
+        exp_id: exp_130
+        best_exp_id: exp_130
         agg_freq: 24 # [step]
     lightgbm:
         objective: regression
         learning_rate: 0.01
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 7
-        num_leaves: 40
-        colsample_bytree: 0.7
+        reg_alpha: 1.00853
+        reg_lambda: 10.326107
+        max_depth: 9
+        num_leaves: 33
+        colsample_bytree: 0.454097
         n_estimators: 1000000
+        random_state: 42
 
 patch_transformer_gru:
     execution:
