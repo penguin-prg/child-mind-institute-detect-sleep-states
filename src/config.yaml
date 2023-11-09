@@ -11,7 +11,7 @@ env:
 xgb_model:
     execution:
         exp_id: exp_128
-        best_exp_id: exp_116
+        best_exp_id: exp_128
         agg_freq: 24 # [step]
     xgboost:
         objective: reg:squarederror
