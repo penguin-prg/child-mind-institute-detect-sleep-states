@@ -10,18 +10,19 @@ env:
 
 xgb_model:
     execution:
-        exp_id: exp_116
+        exp_id: exp_128
         best_exp_id: exp_116
         agg_freq: 24 # [step]
     xgboost:
         objective: reg:squarederror
         learning_rate: 0.01
-        reg_alpha: 0.02
-        reg_lambda: 0.2
-        random_state: 42
-        max_depth: 5
-        colsample_bytree: 0.7
+        reg_alpha: 609.0209739686968
+        reg_lambda: 0.0012784881051895653
+        max_depth: 7
+        colsample_bytree: 0.7716653154458131
+        subsample: 0.7535747757020815
         tree_method: gpu_hist
+        random_state: 42
 
 lgb_model:
     execution:
