@@ -55,8 +55,8 @@ patch_transformer_gru:
 
 patch_wavenet_gru:
     execution:
-        exp_id: exp_131
-        best_exp_id: exp_131
+        exp_id: exp_132
+        best_exp_id: exp_132
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
