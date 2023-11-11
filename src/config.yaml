@@ -86,8 +86,8 @@ spectrogram:
 
 ensemble:
     execution:
-        exp_id: exp_084
-        best_exp_id: exp_084
+        exp_id: exp_ensemble
+        best_exp_id: exp_ensemble
 
 stacking:
     execution:
