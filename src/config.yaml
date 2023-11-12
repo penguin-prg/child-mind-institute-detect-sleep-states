@@ -42,8 +42,8 @@ lgb_model:
 
 patch_transformer_gru:
     execution:
-        exp_id: exp_127
-        best_exp_id: exp_127
+        exp_id: exp_133
+        best_exp_id: exp_133
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
