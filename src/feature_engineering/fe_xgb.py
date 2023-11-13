@@ -55,6 +55,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
             continue
         is_same = train["anglez"].diff(d * step_per_day).abs().rolling(12 * 30, center=True).sum() == 0
         train.loc[is_same, "same_count"] += 1
+    train["same_count"] = train["same_count"].clip(0, 5)
     features.add_num_features(["same_count"])
 
     # diff
@@ -91,6 +92,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         "enmo_std",
         # "anglez_diff_abs_std",
         "anglez_diff_abs_clip5_std",
+        "same_count",
     ]
     dts = [1, 3, 5, 10, 30, 100]
     shift_features_dic = {}
