@@ -142,6 +142,10 @@ class ZzzConv1dGRUModel(nn.Module):
         self.numerical_linear = nn.Sequential(
             nn.Linear(input_numerical_size, numeraical_linear_size),
             nn.LayerNorm(numeraical_linear_size),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(numeraical_linear_size, numeraical_linear_size),
+            nn.LayerNorm(numeraical_linear_size),
         )
 
         k = 64

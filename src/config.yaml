@@ -65,10 +65,10 @@ patch_wavenet_gru:
         linear_out: 128
         dropout: 0.0
 
-conv1d_gru_model:
+patch_1dcnn_gru:
     execution:
-        exp_id: exp_106
-        best_exp_id: exp_100
+        exp_id: exp_137
+        best_exp_id: exp_137
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
