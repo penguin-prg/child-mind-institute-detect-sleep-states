@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from typing import List, Tuple
 
 import pandas as pd
+import numpy as np
 import yaml
 from tqdm import tqdm
 
@@ -26,6 +27,8 @@ from utils.pandas_utils import reduce_mem_usage
 
 def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
     train = train.sort_values("step").reset_index(drop=True)
+    train["anglez"] = train["anglez"].astype(np.float16)
+    train["enmo"] = train["enmo"].astype(np.float16)
 
     features = Features()
 
@@ -145,6 +148,12 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         train = train[train["reduce_step"].isin(cands)]
 
     train = reduce_mem_usage(train)
+
+    for f in features.all_features():
+        if f == "total_seconds":
+            continue
+        train[f] = train[f].astype(np.float16)
+
     gc.collect()
     return train, features
 
