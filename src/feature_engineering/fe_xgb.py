@@ -5,7 +5,9 @@ import sys
 from multiprocessing import Pool
 from typing import List, Tuple
 
+import polars as pl
 import pandas as pd
+import numpy as np
 import yaml
 from tqdm import tqdm
 
@@ -19,6 +21,11 @@ if True:
     )
     with open(cand_path, "rb") as f:
         next_cands = pickle.load(f)
+
+    oof = pl.read_parquet(
+        os.path.join("/kaggle/output", CFG["patch_transformer_gru"]["execution"]["best_exp_id"], "oof.parquet"),
+    ).to_pandas()
+
 
 from utils.feature_contena import Features
 from utils.pandas_utils import reduce_mem_usage
@@ -36,7 +43,10 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train["minutes"] = train["total_seconds"] % (60 * 60)
     features.add_num_features(["total_seconds", "minutes"])
 
-    columns = ["anglez", "enmo"]
+    train["anglez"] = train["anglez"].astype(np.float16)
+    train["enmo"] = train["enmo"].astype(np.float16)
+
+    columns = ["anglez", "enmo", "wakeup_oof", "onset_oof"]
     features.add_num_features(columns)
 
     # その人のその時刻での平均的な測定値
@@ -44,6 +54,8 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     gb.columns = [f"{c}_mean" for c in columns]
     train["anglez_mean"] = train["total_seconds"].map(gb["anglez_mean"])
     train["enmo_mean"] = train["total_seconds"].map(gb["enmo_mean"])
+    train["wakeup_oof_mean"] = train["total_seconds"].map(gb["wakeup_oof_mean"])
+    train["onset_oof_mean"] = train["total_seconds"].map(gb["onset_oof_mean"])
     features.add_num_features(gb.columns.tolist())
 
     # 30分間完全一致した回数
@@ -93,6 +105,8 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         # "anglez_diff_abs_std",
         "anglez_diff_abs_clip5_std",
         "same_count",
+        "onset_oof",
+        "wakeup_oof",
     ]
     dts = [1, 3, 5, 10, 30, 100]
     shift_features_dic = {}
@@ -145,12 +159,35 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
         train = train[train["reduce_step"].isin(cands)]
 
     train = reduce_mem_usage(train)
+
+    for f in features.all_features():
+        if f == "total_seconds":
+            continue
+        train[f] = train[f].astype(np.float16)
     gc.collect()
     return train, features
 
 
 def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
     train = pd.read_parquet(file)
+
+    oof_df = oof[oof["series_id"] == train["series_id"].values[0]]
+
+    train["wakeup_oof"] = (
+        train["step"]
+        .map(oof_df.set_index("step")["wakeup_oof"])
+        .interpolate(method="linear", direction="both", limit=12 * 10)
+        .fillna(0)
+        .astype(np.float16)
+    )
+    train["onset_oof"] = (
+        train["step"]
+        .map(oof_df.set_index("step")["onset_oof"])
+        .interpolate(method="linear", direction="both", limit=12 * 10)
+        .fillna(0)
+        .astype(np.float16)
+    )
+
     train, features = series_generate_features(train)
     gc.collect()
     return train, features
