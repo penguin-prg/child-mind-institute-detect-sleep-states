@@ -59,6 +59,7 @@ class MyLightningModule(pl.LightningModule):
         lr: float = 0.001,
         num_training_steps: int = 1000,
         weight_decay: float = 0,
+        mask_minutes: int = None,
     ):
         super().__init__()
 
@@ -69,6 +70,7 @@ class MyLightningModule(pl.LightningModule):
         self.lr = lr
         self.weight_decay = weight_decay
         self.num_training_steps = num_training_steps
+        self.mask_minutes = mask_minutes
 
         self.train_metrics = MetricCollection([], prefix="")
         self.valid_metrics = MetricCollection([], prefix="val_")
@@ -77,7 +79,10 @@ class MyLightningModule(pl.LightningModule):
         self.val_step_labels = []
 
     def forward(self, x):
-        return self.model(x)
+        x = self.model(x)
+        if self.mask_minutes is not None:
+            x = x[:, self.mask_minutes : -self.mask_minutes]
+        return x
 
     def _reinitialize(self):
         """
@@ -100,6 +105,8 @@ class MyLightningModule(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         X, y = batch
         preds = self.forward(X)
+        if self.mask_minutes is not None:
+            y = y[:, self.mask_minutes : -self.mask_minutes]
 
         loss = self.loss_fn(preds, y)
 
@@ -124,6 +131,8 @@ class MyLightningModule(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         X, y = batch
         preds = self.forward(X)
+        if self.mask_minutes is not None:
+            y = y[:, self.mask_minutes : -self.mask_minutes]
 
         self.val_step_outputs.append(preds)
         self.val_step_labels.append(y)
