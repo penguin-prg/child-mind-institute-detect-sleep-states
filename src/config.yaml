@@ -99,3 +99,13 @@ stacking:
     params:
         numeraical_linear_size: 168
         model_size: 128
+
+no_label_pred:
+    execution:
+        exp_id: exp_139
+        best_exp_id: exp_139
+        block_size: 17280 # 1day
+        patch_size: 12
+    params:
+        numeraical_linear_size: 168
+        model_size: 128

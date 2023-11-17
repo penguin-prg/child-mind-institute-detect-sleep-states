@@ -180,3 +180,62 @@ class ZzzConv1dGRUModel(nn.Module):
         x, _ = self.rnn(x)
         x = self.linear_out(x)
         return x
+
+
+class ZzzNoLabelTransformerGRUModel(nn.Module):
+    def __init__(
+        self,
+        max_len,
+        dropout=0.0,
+        input_numerical_size=2,
+        numeraical_linear_size=84,  # TF
+        num_layers=4,  # TF
+        dim_feedforward=128,  # TF
+        model_size=128,  # GRU
+        linear_out=128,  # head
+        out_size=2,
+    ):
+        super().__init__()
+
+        self.numerical_linear = nn.Sequential(
+            nn.Linear(input_numerical_size, numeraical_linear_size),
+            nn.LayerNorm(numeraical_linear_size),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(numeraical_linear_size, numeraical_linear_size),
+            nn.LayerNorm(numeraical_linear_size),
+        )
+
+        self.pe = PositionalEncoding(numeraical_linear_size, dropout=0.0, max_len=max_len, batch_first=True)
+        self.transformer = nn.Sequential(
+            *[
+                nn.TransformerEncoderLayer(
+                    d_model=numeraical_linear_size,
+                    nhead=6,
+                    dropout=0.0,
+                    dim_feedforward=dim_feedforward,
+                    batch_first=True,
+                )
+                for _ in range(num_layers)
+            ]
+        )
+
+        self.rnn = nn.GRU(numeraical_linear_size, model_size, num_layers=2, batch_first=True, bidirectional=True)
+        self.linear_out = nn.Sequential(
+            nn.Linear(model_size * 2, linear_out),
+            nn.LayerNorm(linear_out),
+            nn.ReLU(),
+            nn.Dropout(dropout),
+            nn.Linear(linear_out, out_size),
+        )
+
+    def forward(self, x):
+        x = self.numerical_linear(x)
+
+        x = self.pe(x)
+        x = self.transformer(x)
+
+        x, _ = self.rnn(x)
+        x = x.mean(dim=1)  # average pooling
+        x = self.linear_out(x)
+        return x.squeeze(1)

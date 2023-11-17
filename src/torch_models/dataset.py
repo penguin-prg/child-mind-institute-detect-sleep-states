@@ -64,6 +64,34 @@ class ZzzPatchDataset(Dataset):
             return feats
 
 
+class ZzzPatchNoLabelDataset(Dataset):
+    def __init__(self, dfs: List[pd.DataFrame], mode: str, features: Features, patch_size: int):
+        self.dfs = dfs
+        self.mode = mode
+        self.features = features
+        self.patch_size = patch_size
+
+    def __len__(self):
+        return len(self.dfs)
+
+    def __getitem__(self, index):
+        df = self.dfs[index]
+
+        max_len = df.shape[0]
+        patch_size = self.patch_size
+        n_feats = len(self.features.all_features())
+
+        feats = df[self.features.all_features()].values.astype(np.float32)
+        feats = feats.reshape(max_len // patch_size, patch_size, n_feats)
+        feats = feats.reshape(max_len // patch_size, patch_size * n_feats)
+
+        if self.mode == "train":
+            target = df["has_label"].astype(np.float32).max()
+            return feats, target
+        else:
+            return feats
+
+
 class ZzzPatchIndexedDataset(Dataset):
     def __init__(
         self,
