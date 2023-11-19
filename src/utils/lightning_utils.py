@@ -5,6 +5,7 @@ from torch import nn, optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from transformers import get_cosine_schedule_with_warmup
+import gc
 
 
 class MyLightningDataModule(pl.LightningDataModule):
@@ -133,6 +134,7 @@ class MyLightningModule(pl.LightningModule):
         labels = torch.cat(self.val_step_labels)
         self.val_step_outputs.clear()
         self.val_step_labels.clear()
+        gc.collect()
         loss = self.loss_fn(preds, labels)
 
         self.valid_metrics(preds, labels)
