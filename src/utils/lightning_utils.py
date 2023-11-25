@@ -6,6 +6,12 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torchmetrics import MetricCollection
 from transformers import get_cosine_schedule_with_warmup
 import gc
+import pandas as pd
+from multiprocessing import Pool
+from tqdm import tqdm
+
+from utils.metric import compute_comptetition_metric
+from utils.postprocess import dynamic_range_nms
 
 
 class MyLightningDataModule(pl.LightningDataModule):
@@ -76,6 +82,7 @@ class MyLightningModule(pl.LightningModule):
 
         self.val_step_outputs = []
         self.val_step_labels = []
+        self.val_step_keys = []
 
     def forward(self, x):
         return self.model(x)
@@ -99,7 +106,8 @@ class MyLightningModule(pl.LightningModule):
                     p.data.fill_(0)
 
     def training_step(self, batch, batch_idx):
-        X, y = batch
+        X = batch["feats"]
+        y = batch["targets"]
         preds = self.forward(X)
 
         loss = self.loss_fn(preds, y)
@@ -123,19 +131,25 @@ class MyLightningModule(pl.LightningModule):
         return {"loss": loss}
 
     def validation_step(self, batch, batch_idx):
-        X, y = batch
+        X = batch["feats"]
+        y = batch["targets"]
+        keys = batch["keys"]
         preds = self.forward(X)
 
         self.val_step_outputs.append(preds)
         self.val_step_labels.append(y)
+        self.val_step_keys += keys
 
     def on_validation_epoch_end(self):
         preds = torch.cat(self.val_step_outputs)
         labels = torch.cat(self.val_step_labels)
-        self.val_step_outputs.clear()
-        self.val_step_labels.clear()
+        keys = self.val_step_keys
         gc.collect()
         loss = self.loss_fn(preds, labels)
+        score = self.compute_metric(preds, labels, keys)
+        self.val_step_outputs.clear()
+        self.val_step_labels.clear()
+        self.val_step_keys.clear()
 
         self.valid_metrics(preds, labels)
         self.log(
@@ -153,9 +167,18 @@ class MyLightningModule(pl.LightningModule):
             on_epoch=True,
             on_step=False,
         )
+        self.log(
+            "val_score",
+            score,
+            prog_bar=True,
+            logger=True,
+            on_epoch=True,
+            on_step=False,
+        )
 
         # ログをprint
         self.print_metric(preds, labels, "valid")
+        print(f"val_score={score:.4f}")
 
     def configure_optimizers(self):
         optimizer = optim.Adam(self.parameters(), lr=self.lr, weight_decay=self.weight_decay)
@@ -175,8 +198,56 @@ class MyLightningModule(pl.LightningModule):
         loss = self.loss_fn(y_hat, y)
 
         print(f"[epoch {self.trainer.current_epoch}] {train_or_valid}: ", end="")
-        print(f"{type(self.loss_fn).__name__}={loss:.4f}", end=", ")
+        print(f"{type(self.loss_fn).__name__}={loss:.6f}", end=", ")
         for name in metrics:
             v = metrics[name](y_hat, y)
-            print(f"{name}={v:.4f}", end=", ")
+            print(f"{name}={v:.6f}", end=", ")
         print()
+
+    @classmethod
+    def compute_metric(cls, preds, labels, keys) -> float:
+        dfs = []
+        for key, pred, _ in zip(keys, preds, labels):
+            sid = key.split("_")[0]
+            start = int(key.split("_")[1])
+            end = int(key.split("_")[2])
+            df = pd.DataFrame(
+                {
+                    "series_id": sid,
+                    "step": np.arange(start + 6, end, 12),
+                    "wakeup_oof": pred[:, 0].sigmoid().detach().cpu().numpy(),
+                    "onset_oof": pred[:, 1].sigmoid().detach().cpu().numpy(),
+                }
+            )
+            dfs.append(df)
+        df = pd.concat(dfs)
+        train = df.groupby(["series_id", "step"]).mean().reset_index().sort_values(["series_id", "step"])
+
+        labels = pd.read_csv("/kaggle/input/child-mind-institute-detect-sleep-states/train_events.csv")
+        labels = labels[labels["series_id"].isin(train["series_id"].unique())].dropna()
+        labels["step"] = labels["step"].astype(int)
+
+        dfs = []
+        df = train[["series_id", "step", "wakeup_oof"]].copy()
+        df["event"] = "wakeup"
+        df["score"] = df["wakeup_oof"]
+        dfs.append(df[["series_id", "step", "event", "score"]])
+
+        df = train[["series_id", "step", "onset_oof"]].copy()
+        df["event"] = "onset"
+        df["score"] = df["onset_oof"]
+        dfs.append(df[["series_id", "step", "event", "score"]])
+
+        train = pd.concat(dfs)
+        train = train[train["score"] > 0.005].reset_index(drop=True)
+        if len(train) == 0:
+            return 0.0
+
+        train["step"] = train["step"].astype(int)
+        groups = [group for _, group in train.groupby("series_id")]
+        with Pool(30) as p:
+            results = list(p.imap(dynamic_range_nms, groups))
+        sub = pd.concat(results)
+        sub["score"] = sub["reduced_score"]
+        score = compute_comptetition_metric(labels, sub)[0]
+        return score

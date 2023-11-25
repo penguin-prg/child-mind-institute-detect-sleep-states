@@ -41,11 +41,17 @@ class ZzzPatchDataset(Dataset):
         self.features = features
         self.patch_size = patch_size
 
+        self.sids = [df["series_id"].unique()[0] for df in dfs]
+        self.starts = [df["step"].min() for df in dfs]
+        self.ends = [df["step"].max() + 1 for df in dfs]
+        self.keys = [f"{sid}_{start}_{end}" for sid, start, end in zip(self.sids, self.starts, self.ends)]
+
     def __len__(self):
         return len(self.dfs)
 
     def __getitem__(self, index):
         df = self.dfs[index]
+        key = self.keys[index]
 
         max_len = df.shape[0]
         patch_size = self.patch_size
@@ -59,9 +65,16 @@ class ZzzPatchDataset(Dataset):
             targets = df[["wakeup_target", "onset_target"]].values.astype(np.float32)
             targets = targets.reshape(max_len // patch_size, patch_size, 2).mean(axis=1)
             assert targets.shape == (max_len // patch_size, 2)
-            return feats, targets
+            return {
+                "feats": feats,
+                "targets": targets,
+                "keys": key,
+            }
         else:
-            return feats
+            return {
+                "feats": feats,
+                "keys": key,
+            }
 
 
 class ZzzPatchIndexedDataset(Dataset):
