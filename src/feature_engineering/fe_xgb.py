@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import yaml
 from tqdm import tqdm
+import polars as pl
 
 if True:
     PACKAGE_DIR = os.path.join(os.path.dirname(__file__), "../")
@@ -29,6 +30,7 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train = train.sort_values("step").reset_index(drop=True)
     train["anglez"] = train["anglez"].astype(np.float16)
     train["enmo"] = train["enmo"].astype(np.float16)
+    train.drop(columns=["event"], inplace=True)
 
     features = Features()
 
@@ -38,6 +40,9 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     train["total_seconds"] = (total_seconds + train.index * 5) % (24 * 60 * 60)  # [sec]
     train["minutes"] = train["total_seconds"] % (60 * 60)
     features.add_num_features(["total_seconds", "minutes"])
+    del timestamp, total_seconds
+    train.drop(columns=["timestamp"], inplace=True)
+    gc.collect()
 
     columns = ["anglez", "enmo"]
     features.add_num_features(columns)
@@ -158,14 +163,87 @@ def series_generate_features(train: pd.DataFrame) -> Tuple[pd.DataFrame, Feature
     return train, features
 
 
-def read_and_generate_features(file: str) -> Tuple[pd.DataFrame, Features]:
-    train = pd.read_parquet(file)
-    train, features = series_generate_features(train)
+def series_generate_features2(train: pd.DataFrame) -> Tuple[pd.DataFrame, Features]:
+    train = train.sort_values("step").reset_index(drop=True)
+    features = Features()
+
+    columns = ["is_longest_sleep_episode", "is_sleep_block"]
+    features.add_num_features(columns)
+
+    # 一定stepで集約
+    series_id = train["series_id"].values[0]
+    agg_freq = CFG["xgb_model"]["execution"]["agg_freq"]
+    columns = features.all_features() + ["step"]
+    train = train[columns].groupby(train["step"].values // agg_freq).mean()
+    gc.collect()
+    train = train.reset_index(drop=True)
+
+    # rolling
+    columns = ["is_longest_sleep_episode", "is_sleep_block"]
+    dts = [1, 3, 5, 10, 30]
+    shift_features_dic = {}
+    for dt in dts:
+        shift_features = []
+
+        f_names = [f"{c}_rolling_mean_{dt}" for c in columns]
+        train[f_names] = train[columns].rolling(dt, center=True).mean()
+        features.add_num_features(f_names)
+        shift_features += f_names
+
+        shift_features_dic[dt] = shift_features
+
+    # shift
+    for dt, shift_features in shift_features_dic.items():
+        used = set()
+        for c in [-10, -5, -2, -1, -0.5, 0.5, 1, 2, 5, 10]:
+            _dt = int(dt * c)
+            if _dt == 0 or _dt in used:
+                continue
+            used.add(_dt)
+            f_names = [f"{c}_shift_{_dt}" for c in shift_features]
+            train[f_names] = train[shift_features].shift(_dt)
+            features.add_num_features(f_names)
+
+    # next_candsにないstepは除外
+    if series_id in next_cands:
+        cands = next_cands[series_id]
+        train["reduce_step"] = train["step"].astype(int)
+        train = train[train["reduce_step"].isin(cands)]
+
+    train = reduce_mem_usage(train)
+
+    for f in features.all_features():
+        if f == "total_seconds":
+            continue
+        train[f] = train[f].astype(np.float16)
+
     gc.collect()
     return train, features
 
 
-def generate_features(files: List[str]) -> Tuple[pd.DataFrame, Features]:
+def read_and_generate_features(file: Tuple[str, str]) -> Tuple[pd.DataFrame, Features]:
+    train = pd.read_parquet(file[0])
+    fdf = pd.read_parquet(file[1], columns=["is_longest_sleep_episode", "is_sleep_block"])
+    fdf["series_id"] = train["series_id"].values[0]
+    fdf["step"] = train["step"]
+
+    train2, features2 = series_generate_features2(fdf)
+    del fdf
+    gc.collect()
+    train1, features1 = series_generate_features(train)
+    del train
+    gc.collect()
+
+    train = pd.concat([train1, train2[features2.all_features()]], axis=1)
+    features = Features()
+    features.add_num_features(features1.all_features())
+    features.add_num_features(features2.all_features())
+
+    gc.collect()
+    return train, features
+
+
+def generate_features(files: List[Tuple[str, str]]) -> Tuple[pd.DataFrame, Features]:
     with Pool(CFG["env"]["num_threads"]) as pool:
         results = list(tqdm(pool.imap(read_and_generate_features, files), total=len(files), desc="generate features"))
     dfs, features = zip(*results)

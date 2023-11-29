@@ -10,8 +10,8 @@ env:
 
 xgb_model:
     execution:
-        exp_id: exp_138
-        best_exp_id: exp_138
+        exp_id: exp_153
+        best_exp_id: exp_153
         agg_freq: 12 # [step]
     xgboost:
         objective: reg:squarederror
@@ -26,8 +26,8 @@ xgb_model:
 
 lgb_model:
     execution:
-        exp_id: exp_139
-        best_exp_id: exp_139
+        exp_id: exp_154
+        best_exp_id: exp_154
         agg_freq: 12 # [step]
     lightgbm:
         objective: regression
