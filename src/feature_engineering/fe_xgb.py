@@ -234,6 +234,7 @@ def read_and_generate_features(file: Tuple[str, str]) -> Tuple[pd.DataFrame, Fea
     del train
     gc.collect()
 
+    assert all(train1["step"].values == train2["step"].values)
     train = pd.concat([train1, train2[features2.all_features()]], axis=1)
     features = Features()
     features.add_num_features(features1.all_features())
