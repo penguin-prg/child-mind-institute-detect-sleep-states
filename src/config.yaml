@@ -67,8 +67,8 @@ patch_wavenet_gru:
 
 patch_1dcnn_gru:
     execution:
-        exp_id: exp_137
-        best_exp_id: exp_137
+        exp_id: exp_152
+        best_exp_id: exp_152
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
