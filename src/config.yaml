@@ -53,10 +53,35 @@ patch_transformer_gru:
         model_size: 128
         dropout: 0.0
 
+patch_transformer_gru_v2:
+    execution:
+        exp_id: exp_160
+        best_exp_id: exp_160
+        block_size: 19200 # 12 x 8 * 200
+        patch_size: 12
+    params:
+        numeraical_linear_size: 168
+        num_layers: 4
+        dim_feedforward: 128
+        model_size: 128
+        dropout: 0.0
+
 patch_wavenet_gru:
     execution:
         exp_id: exp_151
         best_exp_id: exp_151
+        block_size: 19200 # 12 x 8 * 200
+        patch_size: 12
+    params:
+        numeraical_linear_size: 168
+        model_size: 128
+        linear_out: 128
+        dropout: 0.0
+
+patch_wavenet_gru_v2:
+    execution:
+        exp_id: exp_161
+        best_exp_id: exp_161
         block_size: 19200 # 12 x 8 * 200
         patch_size: 12
     params:
