@@ -38,3 +38,10 @@ NOTE:
 - Directories (`/kaggle/output/exp_XXX`) are created and the output files (including model weights) are stored in them.
 - To avoid OOM, free memory when each notebook is finished executing.
 - The training codes will delete all data in `/kaggle/working` when they are executed.
+
+## Supplemental Information for Competition Organizers
+- Dockerfile is used instead of `B4.requirements.txt`.
+- `src/config.yaml` is used instead of `B6. SETTINGS.json`.
+- `B7. Serialized copy of the trained model` is [here](https://www.kaggle.com/datasets/ryotayoshinobu/zzz-output).
+- `B8. entry_points.md` is not included because my all codes are `.ipynb` format.
+
