@@ -11,6 +11,6 @@ tmp/*
 temp/*
 working/*
 *.pdf
-*.txt
+# *.txt
 !.devcontainer/*
 !.vscode/*
